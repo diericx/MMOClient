@@ -155,7 +155,8 @@ public class client : MonoBehaviour
     {
         while (isAlive)
         {
-            BoxingPacker packer = new BoxingPacker();
+			Debug.Log("SENDING");
+			BoxingPacker packer = new BoxingPacker();
 
             Dictionary<string, object> message = new Dictionary<string, object>();
             message.Add("Action", "update");
@@ -168,6 +169,8 @@ public class client : MonoBehaviour
 
             //			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
             int i = server.Send(encodedMessage);
+            
+            Debug.Log("SENT");
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }
