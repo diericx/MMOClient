@@ -29,7 +29,7 @@ public class client : MonoBehaviour
     {
         server.SendTimeout = 5000;
         server.ReceiveTimeout = 5000;
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.112"), 4000);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("67.160.192.45"), 7777);
 
         try
         {
