@@ -14,7 +14,7 @@ public class client : MonoBehaviour
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
     private const float SERVER_GET_RATE = 0.1f;
-    private const float SERVER_SEND_RATE = 0.20f;
+    private const float SERVER_SEND_RATE = 0.10f;
 
     public GameObject playerPrefab;
     public int xMovement = 0;
@@ -29,7 +29,7 @@ public class client : MonoBehaviour
     {
         server.SendTimeout = 5000;
         server.ReceiveTimeout = 5000;
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("67.160.192.45"), 7777);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.112"), 7777);
 
         try
         {
