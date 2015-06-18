@@ -14,8 +14,7 @@ public class Client : MonoBehaviour
 
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-    private const float SERVER_GET_RATE = 0.1f;
-    private const float SERVER_SEND_RATE = 0.20f;
+    private const float SERVER_SEND_RATE = 0.10f;
 
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
@@ -30,9 +29,9 @@ public class Client : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        server.SendTimeout = 5000;
-        server.ReceiveTimeout = 5000;
-		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.1.18"), 7777);
+        server.SendTimeout = 1000;
+        server.ReceiveTimeout = 1000;
+		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.167"), 7777);
 
         try
         {
@@ -44,8 +43,6 @@ public class Client : MonoBehaviour
             Debug.Log(e.ToString());
             return;
         }
-
-        StartCoroutine(getData());
 
         StartCoroutine(sendData());
 
@@ -135,10 +132,10 @@ public class Client : MonoBehaviour
 		return bulletObj;
 	}
 	
-	IEnumerator getData()
+	public void getData()
     {
-        while (isAlive)
-        {
+        //while (isAlive)
+        //{
             byte[] message = new byte[100];
             int available = server.Available;
             while (available >= 100)
@@ -220,8 +217,8 @@ public class Client : MonoBehaviour
 			}
 			
 			
-			yield return new WaitForSeconds(SERVER_GET_RATE);
-		}
+			//yield return new WaitForSeconds(SERVER_GET_RATE);
+        //}
 	}
 	
 	IEnumerator sendData()
