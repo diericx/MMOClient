@@ -2,8 +2,8 @@
 using System.Collections;
 
 public class userInput : MonoBehaviour {
-    public GameObject client;
-	// Use this for initialization
+    public Client clientScript;
+    private float playerSpeed = 0f;
 	void Start () {
 	
 	}
@@ -12,28 +12,59 @@ public class userInput : MonoBehaviour {
 	void Update () {
         if (Input.GetKey("w"))
         {
-            client.GetComponent<client>().yMovement = 1;
+			clientScript.yMovement = 1;
+			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x, p.playerObject.transform.position.y + (1*playerSpeed), 0);
         }
         else if (Input.GetKey("s"))
         {
-            client.GetComponent<client>().yMovement = -1;
+			clientScript.yMovement = -1;
+			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x, p.playerObject.transform.position.y - (1*playerSpeed), 0);
         }
         else
         {
-            client.GetComponent<client>().yMovement = 0;
+			clientScript.yMovement = 0;
         }
 
         if (Input.GetKey("d"))
         {
-             client.GetComponent<client>().xMovement = 1;
+			clientScript.xMovement = 1;
+			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x + (1*playerSpeed), p.playerObject.transform.position.y, 0);
         }
         else if (Input.GetKey("a"))
         {
-            client.GetComponent<client>().xMovement = -1;
+			clientScript.xMovement = -1;
+			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x - (1*playerSpeed), p.playerObject.transform.position.y, 0);
         }
         else
         {
-            client.GetComponent<client>().xMovement = 0;
+			clientScript.xMovement = 0;
         }
+        
+		if (Input.GetMouseButtonDown(0)) {
+			//get mouse world position
+			float angleInDegrees;
+			float mousex = (Input.mousePosition.x);
+			float mousey = (Input.mousePosition.y);
+			Vector3 mouseposition = Camera.main.ScreenToWorldPoint(new Vector3 (mousex,mousey,0));
+			//get player object
+			Player p = clientScript.isPlayerAlreadyCreated((int)(LoginGUI.userID));
+			//if player is found, calculate angle
+			if (p != null) {
+				float deltaX = mouseposition.x - p.playerObject.transform.position.x;
+				float deltaY = mouseposition.y - p.playerObject.transform.position.y;
+				angleInDegrees = (Mathf.Atan2(deltaY, deltaX) * 180 / Mathf.PI) - 90;
+				print ((int)angleInDegrees);
+				//send shot
+				clientScript.sendShot(p.playerObject.transform.position.x, p.playerObject.transform.position.y, (int)angleInDegrees);
+			}
+
+			
+		}
+		
+		
 	}
 }

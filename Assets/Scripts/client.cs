@@ -6,17 +6,20 @@ using System.Net;
 using System.Threading;
 using MsgPack;
 
-public class client : MonoBehaviour
+public class Client : MonoBehaviour
 {
 
     ArrayList playerList = new ArrayList();
+	ArrayList bulletList = new ArrayList();
 
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
     private const float SERVER_GET_RATE = 0.1f;
-    private const float SERVER_SEND_RATE = 0.10f;
+    private const float SERVER_SEND_RATE = 0.20f;
 
     public GameObject playerPrefab;
+    public GameObject bulletPrefab;
+    
     public int xMovement = 0;
     public int yMovement = 0;
 
@@ -29,7 +32,7 @@ public class client : MonoBehaviour
     {
         server.SendTimeout = 5000;
         server.ReceiveTimeout = 5000;
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.112"), 7777);
+		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.1.18"), 7777);
 
         try
         {
@@ -57,7 +60,6 @@ public class client : MonoBehaviour
 
     public void sendInput(int x, int y)
     {
-        Debug.Log("INPUT");
         BoxingPacker packer = new BoxingPacker();
 
         Dictionary<string, object> message = new Dictionary<string, object>();
@@ -70,9 +72,26 @@ public class client : MonoBehaviour
         //			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
         int i = server.Send(encodedMessage);
     }
-
-    //check if the player is already in the list
-    public Player isPlayerAlreadyCreated(int id)
+    
+    public void sendShot(float x, float y, int rotation) {
+		Debug.Log("SHOT");
+		BoxingPacker packer = new BoxingPacker();
+		
+		Dictionary<string, object> message = new Dictionary<string, object>();
+		message.Add("Action", "shoot");
+		message.Add("ID", ((int)(LoginGUI.userID)).ToString());
+		message.Add("X", x);
+		message.Add("Y", y);
+		message.Add("Rotation", rotation);
+		
+		var encodedMessage = packer.Pack(message);
+		
+		//			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
+		int i = server.Send(encodedMessage);
+	}
+	
+	//check if the player is already in the list
+	public Player isPlayerAlreadyCreated(int id)
     {
         Player response = null;
 
@@ -86,14 +105,37 @@ public class client : MonoBehaviour
 
         return response;
     }
+    
+	//check if the bullet is already in the list
+	public Bullet isBulletAlreadyCreated(int id)
+	{
+		Bullet response = null;
+		
+		foreach(Bullet b in bulletList )
+		{
+			if (b.id == id)
+			{
+				response = b;
+			}
+		}
+		
+		return response;
+	}
 
+	//FUNCTUONS FOR INSTANTIATING GAME OBJECTS
     public GameObject instantiateNewPlayerObject()
     {
         GameObject playerObj = (GameObject)Instantiate(playerPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         return playerObj;
     }
-
-    IEnumerator getData()
+    
+	public GameObject instantiateNewBulletObject(float x, float y)
+	{
+		GameObject bulletObj = (GameObject)Instantiate(bulletPrefab, new Vector3(x, y, 0), Quaternion.identity);
+		return bulletObj;
+	}
+	
+	IEnumerator getData()
     {
         while (isAlive)
         {
@@ -104,10 +146,11 @@ public class client : MonoBehaviour
                 server.Receive(message, 100, 0);
 
                 BoxingPacker packer = new BoxingPacker();
+                print (message);
                 Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
                 string action = msg["Action"].ToString();
 
-                if (action == "update")
+                if (action == "playerUpdate")
                 {
                     //parse all variables
                     float x = float.Parse(msg["X"].ToString());
@@ -121,7 +164,7 @@ public class client : MonoBehaviour
                     {
                         Debug.Log("Needs to be nade");
                         Player newPlayer = new Player(id);
-                        newPlayer.playerObject = instantiateNewPlayerObject();
+                        newPlayer.playerObject = instantiateNewPlayerObject(); 
                         newPlayer.x = x;
                         newPlayer.y = y;
                         //add new object to player list
@@ -135,26 +178,56 @@ public class client : MonoBehaviour
                         foundPlayer.move(x, y);
                     }
 
-                    Debug.Log("Action: " + msg["Action"] + "; ID: " + msg["ID"] + "; X: " + msg["X"] + "; Y: " + msg["Y"]);
-                    //player.transform.position = new Vector3(x, y, 0);
+                    //Debug.Log("Action: " + msg["Action"] + "; ID: " + msg["ID"] + "; X: " + msg["X"] + "; Y: " + msg["Y"]);
                 }
-                else if (action == "message")
-                {
-                    Debug.Log("Action: " + msg["Action"] + "; Data: " + msg["Data"]);
-                }
-
-                available -= 100;
-            }
-
-
-            yield return new WaitForSeconds(SERVER_GET_RATE);
-        }
-    }
-
-    IEnumerator sendData()
-    {
-        while (isAlive)
-        {
+                else if (action == "bulletUpdate") {
+					//parse all variables
+					print ("BULLET UP");
+					float x = float.Parse(msg["X"].ToString());
+					float y = float.Parse(msg["Y"].ToString());
+					int id = int.Parse(msg["ID"].ToString());
+					int rot = int.Parse(msg["Rotation"].ToString());
+					//check if player is already created (already in the list)
+					Bullet foundBullet = isBulletAlreadyCreated(id);
+					
+					//if the player isn't already created
+					if (foundBullet == null)
+					{
+						Debug.Log("Bullet needs to be made");
+						Bullet newBullet = new Bullet(id);
+						newBullet.bulletObject = instantiateNewBulletObject(x, y);
+						newBullet.move(x, y);
+						newBullet.bulletObject.transform.eulerAngles = new Vector3(0, 0, rot);
+						newBullet.x = x;
+						newBullet.y = y;
+						//add new object to player list
+						bulletList.Add(newBullet);
+						
+					}
+					//if the bullet has already been created, edit it
+					else
+					{
+						Debug.Log("Bullet found");
+						foundBullet.move(x, y);
+					}
+				}
+				else if (action == "message")
+				{
+					Debug.Log("Action: " + msg["Action"] + "; Data: " + msg["Data"]);
+				}
+				
+				available -= 100;
+			}
+			
+			
+			yield return new WaitForSeconds(SERVER_GET_RATE);
+		}
+	}
+	
+	IEnumerator sendData()
+	{
+		while (isAlive)
+		{
 			Debug.Log("SENDING");
 			BoxingPacker packer = new BoxingPacker();
 
@@ -193,8 +266,29 @@ public class Player {
 
     public void move(float x, float y)
     {
-        playerObject.GetComponent<player_script>().setTargetPos(x, y);
-        //playerObject.transform.position = new Vector3(x, y, 0);
+        playerObject.GetComponent<Object_script>().setTargetPos(-99999, -99999);
+        playerObject.transform.position = new Vector3(x, y, 0);
     }
 
+}
+
+public class Bullet {
+	
+	public int id;
+	public float x;
+	public float y;
+	public GameObject bulletObject;
+	
+	public Bullet(int id) {
+		this.id = id;
+		x = 0;
+		y = 0;
+	}
+	
+	public void move(float x, float y)
+	{
+		bulletObject.GetComponent<Object_script>().setTargetPos(x, y);
+		//bulletObject.transform.position = new Vector3(x, y, 0);
+	}
+	
 }
