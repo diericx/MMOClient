@@ -3,7 +3,7 @@ using System.Collections;
 
 public class userInput : MonoBehaviour {
     public Client clientScript;
-    private float playerSpeed = 0f;
+    private float playerSpeed = 0.1f;
 	void Start () {
 	
 	}
