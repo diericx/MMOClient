@@ -31,7 +31,7 @@ public class Client : MonoBehaviour
     {
         server.SendTimeout = 1000;
         server.ReceiveTimeout = 1000;
-		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.167"), 7777);
+		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("10.0.1.142"), 7777);
 
         try
         {
@@ -135,11 +135,13 @@ public class Client : MonoBehaviour
     {
         //while (isAlive)
         //{
-            byte[] message = new byte[100];
+            byte[] message = new byte[1000];
             int available = server.Available;
             while (available >= 100)
             {
-                server.Receive(message, 100, 0);
+			server.Receive(message, message.Length, 0);
+                
+				System.IO.File.WriteAllBytes("UpdatePacket.hex", message);
 
                 BoxingPacker packer = new BoxingPacker();
                 print (message);
@@ -176,6 +178,7 @@ public class Client : MonoBehaviour
                         Debug.Log("Player found");
                         foundPlayer.move(x, y);
                     }
+                    
 
                     //Debug.Log("Action: " + msg["Action"] + "; ID: " + msg["ID"] + "; X: " + msg["X"] + "; Y: " + msg["Y"]);
                 }
