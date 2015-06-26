@@ -57,7 +57,7 @@ public class userInput : MonoBehaviour {
 				float deltaX = mouseposition.x - p.playerObject.transform.position.x;
 				float deltaY = mouseposition.y - p.playerObject.transform.position.y;
 				angleInDegrees = (Mathf.Atan2(deltaY, deltaX) * 180 / Mathf.PI) - 90;
-				print ((int)angleInDegrees);
+				//print ((int)angleInDegrees);
 				//send shot
 				clientScript.sendShot(p.playerObject.transform.position.x, p.playerObject.transform.position.y, (int)angleInDegrees);
 			}

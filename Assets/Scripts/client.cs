@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using MsgPack;
+using MsgPack.Serialization;
 
 public class Client : MonoBehaviour
 {
@@ -15,12 +17,15 @@ public class Client : MonoBehaviour
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
     private const float SERVER_SEND_RATE = 0.10f;
+    private const float SERVER_GET_RATE = 0.10f;
 
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
     
     public int xMovement = 0;
     public int yMovement = 0;
+
+    private long packetLength = -1;
 
     bool isAlive = true;
 
@@ -31,7 +36,7 @@ public class Client : MonoBehaviour
     {
         server.SendTimeout = 1000;
         server.ReceiveTimeout = 1000;
-		IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("10.0.1.142"), 7777);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.167"), 7777);
 
         try
         {
@@ -46,8 +51,9 @@ public class Client : MonoBehaviour
 
         StartCoroutine(sendData());
 
-
     }
+
+    
 
     // Update is called once per frame
     void Update()
@@ -66,7 +72,7 @@ public class Client : MonoBehaviour
         var encodedMessage = packer.Pack(message);
 
         //			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
-        int i = server.Send(encodedMessage);
+        //int i = server.Send(encodedMessage);
     }
     
     public void sendShot(float x, float y, int rotation) {
@@ -81,9 +87,9 @@ public class Client : MonoBehaviour
 		message.Add("Rotation", rotation);
 		
 		var encodedMessage = packer.Pack(message);
-		
-		//			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
-		int i = server.Send(encodedMessage);
+
+        int i = server.Send(encodedMessage);
+
 	}
 	
 	//check if the player is already in the list
@@ -130,108 +136,134 @@ public class Client : MonoBehaviour
 		GameObject bulletObj = (GameObject)Instantiate(bulletPrefab, new Vector3(x, y, 0), Quaternion.identity);
 		return bulletObj;
 	}
-	
-	public void getData()
+
+    void parsePacket(Dictionary<string, object> msg)
     {
-        //while (isAlive)
-        //{
-            byte[] message = new byte[1000];
-            int available = server.Available;
-            while (available >= 100)
+        string action = msg["Action"].ToString();
+
+        if (action == "playerUpdate")
+        {
+            //parse all variables
+            float x = float.Parse(msg["X"].ToString());
+            float y = float.Parse(msg["Y"].ToString());
+            int id = int.Parse(msg["ID"].ToString());
+            //int[] bulletIDs = (int[])msg["BulletIDs"];
+            //Dictionary<string, object> bullets = (Dictionary<string, object>)msg["Bullets"];
+
+            //check if player is already created (already in the list)
+            Player foundPlayer = isPlayerAlreadyCreated(id);
+
+            //if the player isn't already created
+            if (foundPlayer == null)
             {
-			server.Receive(message, message.Length, 0);
-                
-				System.IO.File.WriteAllBytes("UpdatePacket.hex", message);
+                Debug.Log("Needs to be nade");
+                Player newPlayer = new Player(id);
+                newPlayer.playerObject = instantiateNewPlayerObject();
+                newPlayer.x = x;
+                newPlayer.y = y;
+                //add new object to player list
+                playerList.Add(newPlayer);
+
+            }
+            //if the player has already been created, edit it
+            else
+            {
+                foundPlayer.move(x, y);
+            }
+
+
+            //Debug.Log("Action: " + msg["Action"] + "; ID: " + msg["ID"] + "; X: " + msg["X"] + "; Y: " + msg["Y"]);
+        }
+        else if (action == "bulletUpdate")
+        {
+            //parse all variables
+            print("BULLET UP");
+            float x = float.Parse(msg["X"].ToString());
+            float y = float.Parse(msg["Y"].ToString());
+            int id = int.Parse(msg["ID"].ToString());
+            int rot = int.Parse(msg["Rotation"].ToString());
+            //check if player is already created (already in the list)
+            Bullet foundBullet = isBulletAlreadyCreated(id);
+
+            //if the player isn't already created
+            if (foundBullet == null)
+            {
+                Debug.Log("Bullet needs to be made");
+                Bullet newBullet = new Bullet(id);
+                newBullet.bulletObject = instantiateNewBulletObject(x, y);
+                newBullet.move(x, y);
+                newBullet.bulletObject.transform.eulerAngles = new Vector3(0, 0, rot);
+                newBullet.x = x;
+                newBullet.y = y;
+                //add new object to player list
+                bulletList.Add(newBullet);
+
+            }
+            //if the bullet has already been created, edit it
+            else
+            {
+                Debug.Log("Bullet found");
+                foundBullet.move(x, y);
+            }
+        }
+        else if (action == "message")
+        {
+            Debug.Log("Action: " + msg["Action"] + "; Data: " + msg["Data"]);
+        }
+    }
+
+    void getData()
+    {
+        //if we havent gotten a packet header length yet
+        if (packetLength == -1)
+        {
+            //get the packet header
+            byte[] header = new byte[8];
+            server.Receive(header, header.Length, 0);
+
+            string headerString = System.Text.Encoding.Default.GetString(header);
+            //print("HEADER:" + headerString);
+            headerString = headerString.Substring(0, 8);
+            long headerVal = Convert.ToInt64(headerString, 2);
+
+            packetLength = headerVal;
+        }
+        else //if we already have a packet header length
+        {
+            int available = server.Available;
+            //wait until the server loads that length
+            if (available >= packetLength)
+            {
+                print("Packet Length: " + packetLength);
+                //load the packet
+                byte[] message = new byte[packetLength];
+                server.Receive(message, message.Length, 0);
+
+                string messageString = System.Text.Encoding.Default.GetString(message);
+                //print("MESSAGE:" + messageString);
 
                 BoxingPacker packer = new BoxingPacker();
-                print (message);
                 Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
                 string action = msg["Action"].ToString();
 
-                if (action == "playerUpdate")
-                {
-                    //parse all variables
-                    float x = float.Parse(msg["X"].ToString());
-                    float y = float.Parse(msg["Y"].ToString());
-                    int id = int.Parse(msg["ID"].ToString());
-                    //int[] bulletIDs = (int[])msg["BulletIDs"];
-                    //Dictionary<string, object> bullets = (Dictionary<string, object>)msg["Bullets"];
 
-                    //check if player is already created (already in the list)
-                    Player foundPlayer = isPlayerAlreadyCreated(id);
+                //---go through the packet and perform actions---
+                parsePacket(msg);
 
-                    //if the player isn't already created
-                    if (foundPlayer == null)
-                    {
-                        Debug.Log("Needs to be nade");
-                        Player newPlayer = new Player(id);
-                        newPlayer.playerObject = instantiateNewPlayerObject(); 
-                        newPlayer.x = x;
-                        newPlayer.y = y;
-                        //add new object to player list
-                        playerList.Add(newPlayer);
+                //reset packet length so that it knows to look for new headers
+                packetLength = -1;
+            }
 
-                    }
-                    //if the player has already been created, edit it
-                    else
-                    {
-                        Debug.Log("Player found");
-                        foundPlayer.move(x, y);
-                    }
-                    
+        }
 
-                    //Debug.Log("Action: " + msg["Action"] + "; ID: " + msg["ID"] + "; X: " + msg["X"] + "; Y: " + msg["Y"]);
-                }
-                else if (action == "bulletUpdate") {
-					//parse all variables
-					print ("BULLET UP");
-					float x = float.Parse(msg["X"].ToString());
-					float y = float.Parse(msg["Y"].ToString());
-					int id = int.Parse(msg["ID"].ToString());
-					int rot = int.Parse(msg["Rotation"].ToString());
-					//check if player is already created (already in the list)
-					Bullet foundBullet = isBulletAlreadyCreated(id);
-					
-					//if the player isn't already created
-					if (foundBullet == null)
-					{
-						Debug.Log("Bullet needs to be made");
-						Bullet newBullet = new Bullet(id);
-						newBullet.bulletObject = instantiateNewBulletObject(x, y);
-						newBullet.move(x, y);
-						newBullet.bulletObject.transform.eulerAngles = new Vector3(0, 0, rot);
-						newBullet.x = x;
-						newBullet.y = y;
-						//add new object to player list
-						bulletList.Add(newBullet);
-						
-					}
-					//if the bullet has already been created, edit it
-					else
-					{
-						Debug.Log("Bullet found");
-						foundBullet.move(x, y);
-					}
-				}
-				else if (action == "message")
-				{
-					Debug.Log("Action: " + msg["Action"] + "; Data: " + msg["Data"]);
-				}
-				
-				available -= 100;
-			}
-			
-			
-			//yield return new WaitForSeconds(SERVER_GET_RATE);
-        //}
 	}
 	
 	IEnumerator sendData()
 	{
 		while (isAlive)
 		{
-			Debug.Log("SENDING");
-			BoxingPacker packer = new BoxingPacker();
+            //Debug.Log("SENDING");
+            BoxingPacker packer = new BoxingPacker();
 
             Dictionary<string, object> message = new Dictionary<string, object>();
             message.Add("Action", "update");
@@ -242,10 +274,28 @@ public class Client : MonoBehaviour
 
             var encodedMessage = packer.Pack(message);
 
-            //			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
+            ////			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
             int i = server.Send(encodedMessage);
+
+            //var targetObject =
+            //    new UpdatePacket
+            //    {
+            //        Action = "update",
+            //        ID = ((int)(LoginGUI.userID)).ToString(),
+            //        X = xMovement,
+            //        Y = yMovement,
+            //        Rotation = 0,
+            //    };
+
+            //if (stream != null)
+            //{
+                //serializer.Pack(stream, targetObject);
+                //byte[] packet = serializer.PackSingleObject(targetObject);
+                //server.Send(packet);
+                //stream.Write(packet, 0, packet.Length);
+            //}
             
-            Debug.Log("SENT");
+            //Debug.Log("SENT");
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }
@@ -293,18 +343,4 @@ public class Bullet {
 		//bulletObject.transform.position = new Vector3(x, y, 0);
 	}
 	
-}
-
-public class BulletPack
-{
-    public int ID;
-    public string Damage;
-    public float X;
-    public float Y;
-    public int Rotation;
-
-    public BulletPack()
-    {
-
-    }
 }
