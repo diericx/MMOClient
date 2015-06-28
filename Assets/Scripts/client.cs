@@ -16,7 +16,7 @@ public class Client : MonoBehaviour
 
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-    private const float SERVER_SEND_RATE = 0.10f;
+    private const float SERVER_SEND_RATE = 0.15f;
     private const float SERVER_GET_RATE = 0.10f;
 
     public GameObject playerPrefab;
@@ -61,19 +61,6 @@ public class Client : MonoBehaviour
         getData();
     }
 
-    public void sendInput(int x, int y)
-    {
-        BoxingPacker packer = new BoxingPacker();
-
-        Dictionary<string, object> message = new Dictionary<string, object>();
-        message.Add("Action", "input");
-        message.Add("X", x);
-        message.Add("Y", y);
-        var encodedMessage = packer.Pack(message);
-
-        //			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
-        //int i = server.Send(encodedMessage);
-    }
     
     public void sendShot(float x, float y, int rotation) {
 		Debug.Log("SHOT");
@@ -88,7 +75,7 @@ public class Client : MonoBehaviour
 		
 		var encodedMessage = packer.Pack(message);
 
-        int i = server.Send(encodedMessage);
+        server.Send(encodedMessage);
 
 	}
 	
@@ -143,6 +130,7 @@ public class Client : MonoBehaviour
 
         if (action == "playerUpdate")
         {
+            //================PLAYER DATA======================
             //parse all variables
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
@@ -169,6 +157,46 @@ public class Client : MonoBehaviour
             else
             {
                 foundPlayer.move(x, y);
+            }
+            //================BULLET DATA======================
+            //get bullet arrays
+            print(msg["BulletIDs"]);
+            List<object> bulletIDs = (List<object>)msg["BulletIDs"];
+            List<object> bulletXs = (List<object>)msg["BulletXs"];
+            List<object> bulletYs = (List<object>)msg["BulletYs"];
+            List<object> bulletRots = (List<object>)msg["BulletRots"];
+            
+            for (int i = 0; i < bulletIDs.Count; i++)
+            {
+                //get data from arrays
+                int bulletID = Convert.ToInt32(bulletIDs[i]);
+                float bulletX = Convert.ToSingle(bulletXs[i]);
+                float bulletY = Convert.ToSingle(bulletYs[i]);
+                int bulletRot = Convert.ToInt32(bulletRots[i]);
+                print(bulletID);
+
+                Bullet foundBullet = isBulletAlreadyCreated(bulletID);
+
+                //if the player isn't already created
+                if (foundBullet == null)
+                {
+                    Debug.Log("Bullet needs to be made");
+                    Bullet newBullet = new Bullet(bulletID);
+                    newBullet.bulletObject = instantiateNewBulletObject(bulletX, bulletY);
+                    newBullet.move(bulletX, bulletY);
+                    newBullet.bulletObject.transform.eulerAngles = new Vector3(0, 0, bulletRot);
+                    newBullet.x = bulletX;
+                    newBullet.y = bulletY;
+                    //add new object to player list
+                    bulletList.Add(newBullet);
+
+                }
+                //if the bullet has already been created, edit it
+                else
+                {
+                    Debug.Log("Bullet found");
+                    foundBullet.move(bulletX, bulletY);
+                }
             }
 
 
@@ -218,13 +246,12 @@ public class Client : MonoBehaviour
         if (packetLength == -1)
         {
             //get the packet header
-            byte[] header = new byte[8];
+            byte[] header = new byte[5];
             server.Receive(header, header.Length, 0);
-
+            //turn bytes into string
             string headerString = System.Text.Encoding.Default.GetString(header);
-            //print("HEADER:" + headerString);
-            headerString = headerString.Substring(0, 8);
-            long headerVal = Convert.ToInt64(headerString, 2);
+            //get value of header string
+            int headerVal = int.Parse(headerString, System.Globalization.NumberStyles.HexNumber);
 
             packetLength = headerVal;
         }
