@@ -21,7 +21,7 @@ public class Object_script : MonoBehaviour {
 	void Update () {
 		if (transform.position.x != targetX)
         {
-			float newX = (transform.position.x * 10 + targetX) / 11;
+			float newX = (transform.position.x * 3 + targetX) / 4;
 			transform.position = new Vector3(newX, transform.position.y, 0);
 			
 			//transform.position = new Vector3(targetX, transform.position.y, 0);
@@ -29,7 +29,7 @@ public class Object_script : MonoBehaviour {
 
 		if (transform.position.y != targetY)
         {
-			float newY = (transform.position.y * 10 + targetY) / 11;
+			float newY = (transform.position.y * 3 + targetY) / 4;
 			transform.position = new Vector3(transform.position.x, newY, 0);
 			
 			//transform.position = new Vector3(transform.position.x, targetY, 0);

@@ -59,6 +59,7 @@ public class Client : MonoBehaviour
     void Update()
     {
         getData();
+        checkObjectsForExpiration();
     }
 
     
@@ -78,6 +79,17 @@ public class Client : MonoBehaviour
         server.Send(encodedMessage);
 
 	}
+
+    //check if this is the main player
+    public bool isThisTheClientPlayer(int id)
+    {
+        bool value = false;
+        if (id == LoginGUI.userID)
+        {
+            value = true;
+        }
+        return value;
+    }
 	
 	//check if the player is already in the list
 	public Player isPlayerAlreadyCreated(int id)
@@ -124,6 +136,20 @@ public class Client : MonoBehaviour
 		return bulletObj;
 	}
 
+    void checkObjectsForExpiration()
+    {
+        foreach (Bullet b in bulletList)
+        {
+            float timeElapsedSinceLastUpdate = Time.time - b.lastUpdate;
+            if (timeElapsedSinceLastUpdate >= 0.5)
+            {
+                UnityEngine.Object.Destroy(b.bulletObject);
+                bulletList.Remove(b);
+                break;
+            }
+        }
+    }
+
     void parsePacket(Dictionary<string, object> msg)
     {
         string action = msg["Action"].ToString();
@@ -135,8 +161,7 @@ public class Client : MonoBehaviour
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
             int id = int.Parse(msg["ID"].ToString());
-            //int[] bulletIDs = (int[])msg["BulletIDs"];
-            //Dictionary<string, object> bullets = (Dictionary<string, object>)msg["Bullets"];
+            int health = int.Parse(msg["Health"].ToString());
 
             //check if player is already created (already in the list)
             Player foundPlayer = isPlayerAlreadyCreated(id);
@@ -144,11 +169,21 @@ public class Client : MonoBehaviour
             //if the player isn't already created
             if (foundPlayer == null)
             {
-                Debug.Log("Needs to be nade");
+                //add easy stuff
+                Debug.Log("!!Player needs to be instantiated!!");
                 Player newPlayer = new Player(id);
                 newPlayer.playerObject = instantiateNewPlayerObject();
                 newPlayer.x = x;
                 newPlayer.y = y;
+                newPlayer.health = health;
+                //make camera follow this player if it is the clients player
+                if (isThisTheClientPlayer(id))
+                {
+                    Camera.main.transform.parent = newPlayer.playerObject.transform;
+                }
+                //add health bar
+                Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
+                newPlayer.healthBarObject = t[1].gameObject;
                 //add new object to player list
                 playerList.Add(newPlayer);
 
@@ -157,10 +192,10 @@ public class Client : MonoBehaviour
             else
             {
                 foundPlayer.move(x, y);
+                foundPlayer.updateHealth(health);
             }
             //================BULLET DATA======================
             //get bullet arrays
-            print(msg["BulletIDs"]);
             List<object> bulletIDs = (List<object>)msg["BulletIDs"];
             List<object> bulletXs = (List<object>)msg["BulletXs"];
             List<object> bulletYs = (List<object>)msg["BulletYs"];
@@ -173,7 +208,6 @@ public class Client : MonoBehaviour
                 float bulletX = Convert.ToSingle(bulletXs[i]);
                 float bulletY = Convert.ToSingle(bulletYs[i]);
                 int bulletRot = Convert.ToInt32(bulletRots[i]);
-                print(bulletID);
 
                 Bullet foundBullet = isBulletAlreadyCreated(bulletID);
 
@@ -194,7 +228,7 @@ public class Client : MonoBehaviour
                 //if the bullet has already been created, edit it
                 else
                 {
-                    Debug.Log("Bullet found");
+                    //Debug.Log("Bullet found");
                     foundBullet.move(bulletX, bulletY);
                 }
             }
@@ -205,7 +239,6 @@ public class Client : MonoBehaviour
         else if (action == "bulletUpdate")
         {
             //parse all variables
-            print("BULLET UP");
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
             int id = int.Parse(msg["ID"].ToString());
@@ -301,28 +334,7 @@ public class Client : MonoBehaviour
 
             var encodedMessage = packer.Pack(message);
 
-            ////			byte[] msgBytes = Encoding.UTF8.GetBytes(newJsonMsg.ToString()+"\n");
             int i = server.Send(encodedMessage);
-
-            //var targetObject =
-            //    new UpdatePacket
-            //    {
-            //        Action = "update",
-            //        ID = ((int)(LoginGUI.userID)).ToString(),
-            //        X = xMovement,
-            //        Y = yMovement,
-            //        Rotation = 0,
-            //    };
-
-            //if (stream != null)
-            //{
-                //serializer.Pack(stream, targetObject);
-                //byte[] packet = serializer.PackSingleObject(targetObject);
-                //server.Send(packet);
-                //stream.Write(packet, 0, packet.Length);
-            //}
-            
-            //Debug.Log("SENT");
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }
@@ -335,7 +347,9 @@ public class Player {
     public int id;
     public float x;
     public float y;
+    public int health;
     public GameObject playerObject;
+    public GameObject healthBarObject;
 
     public Player(int id) {
         this.id = id;
@@ -349,6 +363,12 @@ public class Player {
         playerObject.transform.position = new Vector3(x, y, 0);
     }
 
+    public void updateHealth(int health)
+    {
+        this.health = health;
+        healthBarObject.transform.localScale = new Vector3( (float)health / 100f, healthBarObject.transform.localScale.y, healthBarObject.transform.localScale.z);
+    }
+
 }
 
 public class Bullet {
@@ -357,8 +377,10 @@ public class Bullet {
 	public float x;
 	public float y;
 	public GameObject bulletObject;
+    public float lastUpdate;
 	
 	public Bullet(int id) {
+        lastUpdate = Time.time;
 		this.id = id;
 		x = 0;
 		y = 0;
@@ -366,6 +388,7 @@ public class Bullet {
 	
 	public void move(float x, float y)
 	{
+        lastUpdate = Time.time;
 		bulletObject.GetComponent<Object_script>().setTargetPos(x, y);
 		//bulletObject.transform.position = new Vector3(x, y, 0);
 	}

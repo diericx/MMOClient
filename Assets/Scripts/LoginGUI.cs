@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Net;
 using SimpleJSON;
@@ -7,7 +8,7 @@ public class LoginGUI : MonoBehaviour {
 
 	public static float userID = -1;
 
-	string usernameField = "Zac";
+	string usernameField = "Enter an ID";
 	string passField = "xxxxxxxx";
 	string baseURL = "";
 	string errorString = "There was an error!";
@@ -70,21 +71,30 @@ public class LoginGUI : MonoBehaviour {
 		usernameField = GUI.TextField(usernameFieldRect, usernameField, 25);
 
 		// password field
-		var passFieldRect = new Rect ();
-		passFieldRect.width = 100;
-		passFieldRect.height = 20;
-		passFieldRect.x = loginBox.x + 50;
-		passFieldRect.y = usernameFieldRect.y + passFieldRect.height + 15;
-		passField = GUI.TextField(passFieldRect, passField, 25);
+        //var passFieldRect = new Rect();
+        //passFieldRect.width = 100;
+        //passFieldRect.height = 20;
+        //passFieldRect.x = loginBox.x + 50;
+        //passFieldRect.y = usernameFieldRect.y + passFieldRect.height + 15;
+        //passField = GUI.TextField(passFieldRect, passField, 25);
 
 		// Make the second button.
 		var submitRect = new Rect ();
 		submitRect.width = 80;
 		submitRect.height = 20;
-		submitRect.x = (passFieldRect.x + (passFieldRect.width/2)) - submitRect.width/2 ;
-		submitRect.y = passFieldRect.y + 35;
+        submitRect.x = (usernameFieldRect.x + (usernameFieldRect.width / 2)) - submitRect.width / 2;
+        submitRect.y = usernameFieldRect.y + 35;
 		if(GUI.Button(submitRect, "Submit")) {
-			login ();
+			//login ();
+            int parsedID = 0;
+            bool success = Int32.TryParse(usernameField, out parsedID);
+            if (success == true)
+            {
+                userID = parsedID;
+                shouldGoToGame = true;
+            } else {
+                errorLabelObjString = "Please enter an integer ID";
+            }
 		}
 
 		// error text
