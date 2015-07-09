@@ -150,6 +150,11 @@ public class Client : MonoBehaviour
         }
     }
 
+    void manageIncomingPlayerData(int id, float x, float y)
+    {
+
+    }
+
     void parsePacket(Dictionary<string, object> msg)
     {
         string action = msg["Action"].ToString();
@@ -162,6 +167,8 @@ public class Client : MonoBehaviour
             float y = float.Parse(msg["Y"].ToString());
             int id = int.Parse(msg["ID"].ToString());
             int health = int.Parse(msg["Health"].ToString());
+
+            print("X: " + x + ", Y: " + y);
 
             //check if player is already created (already in the list)
             Player foundPlayer = isPlayerAlreadyCreated(id);
