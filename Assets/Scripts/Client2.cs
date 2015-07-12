@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using MsgPack;
-using MsgPack.Serialization;
 
 public class Client2 : MonoBehaviour {
 

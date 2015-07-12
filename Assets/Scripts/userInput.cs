@@ -13,13 +13,13 @@ public class userInput : MonoBehaviour {
         if (Input.GetKey("w"))
         {
 			clientScript.yMovement = 1;
-			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			Player p = clientScript.isPlayerAlreadyCreated(LoginGUI.userID);
 			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x, p.playerObject.transform.position.y + (1*playerSpeed), 0);
         }
         else if (Input.GetKey("s"))
         {
 			clientScript.yMovement = -1;
-			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			Player p = clientScript.isPlayerAlreadyCreated(LoginGUI.userID);
 			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x, p.playerObject.transform.position.y - (1*playerSpeed), 0);
         }
         else
@@ -30,13 +30,13 @@ public class userInput : MonoBehaviour {
         if (Input.GetKey("d"))
         {
 			clientScript.xMovement = 1;
-			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			Player p = clientScript.isPlayerAlreadyCreated(LoginGUI.userID);
 			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x + (1*playerSpeed), p.playerObject.transform.position.y, 0);
         }
         else if (Input.GetKey("a"))
         {
 			clientScript.xMovement = -1;
-			Player p = clientScript.isPlayerAlreadyCreated((int)LoginGUI.userID);
+			Player p = clientScript.isPlayerAlreadyCreated(LoginGUI.userID);
 			p.playerObject.transform.position = new Vector3(p.playerObject.transform.position.x - (1*playerSpeed), p.playerObject.transform.position.y, 0);
         }
         else
@@ -46,12 +46,21 @@ public class userInput : MonoBehaviour {
         
 		if (Input.GetMouseButtonDown(0)) {
 			//get mouse world position
-			float angleInDegrees;
-			float mousex = (Input.mousePosition.x);
-			float mousey = (Input.mousePosition.y);
-			Vector3 mouseposition = Camera.main.ScreenToWorldPoint(new Vector3 (mousex,mousey,0));
+            float angleInDegrees;
+
+
+            //float mousex = (Input.mousePosition.x);
+            //float mousey = (Input.mousePosition.y);
+            //Vector3 mouseposition = Camera.main.ScreenToWorldPoint(new Vector3 (mousex,mousey,0));
+
+            //get mouse world positon
+            Vector3 screenPoint = Input.mousePosition;
+            screenPoint.z = 20.0f; //distance of the plane from the camera
+            var mouseposition = Camera.main.ScreenToWorldPoint(screenPoint);
+
+
 			//get player object
-			Player p = clientScript.isPlayerAlreadyCreated((int)(LoginGUI.userID));
+			Player p = clientScript.isPlayerAlreadyCreated((LoginGUI.userID));
 			//if player is found, calculate angle
 			if (p != null) {
 				float deltaX = mouseposition.x - p.playerObject.transform.position.x;

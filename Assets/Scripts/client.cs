@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections;
 using System.Net.Sockets;
@@ -6,7 +7,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using MsgPack;
-using MsgPack.Serialization;
 
 public class Client : MonoBehaviour
 {
@@ -21,8 +21,11 @@ public class Client : MonoBehaviour
 
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
+    public GameObject scrapsText;
     
+    [HideInInspector]
     public int xMovement = 0;
+    [HideInInspector]
     public int yMovement = 0;
 
     private long packetLength = -1;
@@ -36,7 +39,7 @@ public class Client : MonoBehaviour
     {
         server.SendTimeout = 1000;
         server.ReceiveTimeout = 1000;
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse("192.168.0.167"), 7777);
+        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(LoginGUI.ip), 7777);
 
         try
         {
@@ -69,7 +72,7 @@ public class Client : MonoBehaviour
 		
 		Dictionary<string, object> message = new Dictionary<string, object>();
 		message.Add("Action", "shoot");
-		message.Add("ID", ((int)(LoginGUI.userID)).ToString());
+		message.Add("ID", ((LoginGUI.userID)));
 		message.Add("X", x);
 		message.Add("Y", y);
 		message.Add("Rotation", rotation);
@@ -81,10 +84,10 @@ public class Client : MonoBehaviour
 	}
 
     //check if this is the main player
-    public bool isThisTheClientPlayer(int id)
+    public bool isThisTheClientPlayer(string id)
     {
         bool value = false;
-        if (id == LoginGUI.userID)
+        if (id.Equals(LoginGUI.userID) )
         {
             value = true;
         }
@@ -92,13 +95,13 @@ public class Client : MonoBehaviour
     }
 	
 	//check if the player is already in the list
-	public Player isPlayerAlreadyCreated(int id)
+	public Player isPlayerAlreadyCreated(string id)
     {
         Player response = null;
 
         foreach(Player p in playerList )
         {
-            if (p.id == id)
+            if ( p.id.Equals(id) )
             {
                 response = p;
             }
@@ -148,11 +151,55 @@ public class Client : MonoBehaviour
                 break;
             }
         }
+
+        foreach (Player p in playerList)
+        {
+            float timeElapsedSinceLastUpdate = Time.time - p.lastUpdate;
+            if (timeElapsedSinceLastUpdate >= 0.5)
+            {
+                if (!isThisTheClientPlayer(p.id))
+                {
+                    UnityEngine.Object.Destroy(p.playerObject);
+                    playerList.Remove(p);
+                    break;
+                }
+            }
+        }
     }
 
-    void manageIncomingPlayerData(int id, float x, float y)
+    void manageIncomingPlayerData(string id, float x, float y, int health)
     {
+        //check if player is already created (already in the list)
+        Player foundPlayer = isPlayerAlreadyCreated(id);
+        //if the player isn't already created
+        if (foundPlayer == null)
+        {
+            //add easy stuff
+            Debug.Log("!!Player needs to be instantiated!!");
+            Player newPlayer = new Player(id);
+            newPlayer.playerObject = instantiateNewPlayerObject();
+            newPlayer.x = x;
+            newPlayer.y = y;
+            newPlayer.health = health;
+            //make camera follow this player if it is the clients player
+            if (isThisTheClientPlayer(id))
+            {
+                Camera.main.transform.parent = newPlayer.playerObject.transform;
+            }
+            //add health bar
+            Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
+            newPlayer.healthBarObject = t[1].gameObject;
+            t[2].GetComponent<TextMesh>().text = id;
+            //add new object to player list
+            playerList.Add(newPlayer);
 
+        }
+        //if the player has already been created, edit it
+        else
+        {
+            foundPlayer.move(x, y);
+            foundPlayer.updateHealth(health);
+        }
     }
 
     void parsePacket(Dictionary<string, object> msg)
@@ -165,56 +212,51 @@ public class Client : MonoBehaviour
             //parse all variables
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
-            int id = int.Parse(msg["ID"].ToString());
+            string id = (msg["ID"].ToString());
             int health = int.Parse(msg["Health"].ToString());
+            int scraps = int.Parse(msg["Scraps"].ToString());
+            //print("X: " + x + ", Y: " + y);
+            //int health = int.Parse(msg["Health"].ToString());
+            //get other player data arrays
+            List<object> otherPlayerIDs = (List<object>)msg["OtherPlayerIDs"];
+            List<object> otherPlayerXs = (List<object>)msg["OtherPlayerXs"];
+            List<object> otherPlayerYs = (List<object>)msg["OtherPlayerYs"];
+            List<object> otherPlayerHlths = (List<object>)msg["OtherPlayerHlths"];
 
-            print("X: " + x + ", Y: " + y);
+            //update scraps text object
+            scrapsText.GetComponent<Text>().text = "Scraps: " + scraps;
 
-            //check if player is already created (already in the list)
-            Player foundPlayer = isPlayerAlreadyCreated(id);
+            //Manage clients player data
+            manageIncomingPlayerData(id, x, y, health);
 
-            //if the player isn't already created
-            if (foundPlayer == null)
+            //Manage other player data
+            for (int i = 0; i < otherPlayerIDs.Count; i++)
             {
-                //add easy stuff
-                Debug.Log("!!Player needs to be instantiated!!");
-                Player newPlayer = new Player(id);
-                newPlayer.playerObject = instantiateNewPlayerObject();
-                newPlayer.x = x;
-                newPlayer.y = y;
-                newPlayer.health = health;
-                //make camera follow this player if it is the clients player
-                if (isThisTheClientPlayer(id))
-                {
-                    Camera.main.transform.parent = newPlayer.playerObject.transform;
-                }
-                //add health bar
-                Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
-                newPlayer.healthBarObject = t[1].gameObject;
-                //add new object to player list
-                playerList.Add(newPlayer);
+                //get data from array
+                string otherPlayerID = (string)(otherPlayerIDs[i]);
+                float otherPlayerX = float.Parse(otherPlayerXs[i].ToString());
+                float otherPlayerY = float.Parse(otherPlayerYs[i].ToString());
+                int otherPlayerHlth = int.Parse(otherPlayerHlths[i].ToString());
+                //print(otherPlayerID + "; " + otherPlayerX + "; " + otherPlayerY);
+                //manage the data
+                manageIncomingPlayerData(otherPlayerID, otherPlayerX, otherPlayerY, otherPlayerHlth);
+            }
 
-            }
-            //if the player has already been created, edit it
-            else
-            {
-                foundPlayer.move(x, y);
-                foundPlayer.updateHealth(health);
-            }
+
             //================BULLET DATA======================
             //get bullet arrays
             List<object> bulletIDs = (List<object>)msg["BulletIDs"];
             List<object> bulletXs = (List<object>)msg["BulletXs"];
             List<object> bulletYs = (List<object>)msg["BulletYs"];
             List<object> bulletRots = (List<object>)msg["BulletRots"];
-            
+
             for (int i = 0; i < bulletIDs.Count; i++)
             {
                 //get data from arrays
-                int bulletID = Convert.ToInt32(bulletIDs[i]);
-                float bulletX = Convert.ToSingle(bulletXs[i]);
-                float bulletY = Convert.ToSingle(bulletYs[i]);
-                int bulletRot = Convert.ToInt32(bulletRots[i]);
+                int bulletID = int.Parse(bulletIDs[i].ToString());
+                float bulletX = float.Parse(bulletXs[i].ToString());
+                float bulletY = float.Parse(bulletYs[i].ToString());
+                int bulletRot = int.Parse(bulletRots[i].ToString());
 
                 Bullet foundBullet = isBulletAlreadyCreated(bulletID);
 
@@ -282,45 +324,49 @@ public class Client : MonoBehaviour
 
     void getData()
     {
-        //if we havent gotten a packet header length yet
-        if (packetLength == -1)
+        while (server.Available > 0)
         {
-            //get the packet header
-            byte[] header = new byte[5];
-            server.Receive(header, header.Length, 0);
-            //turn bytes into string
-            string headerString = System.Text.Encoding.Default.GetString(header);
-            //get value of header string
-            int headerVal = int.Parse(headerString, System.Globalization.NumberStyles.HexNumber);
 
-            packetLength = headerVal;
-        }
-        else //if we already have a packet header length
-        {
-            int available = server.Available;
-            //wait until the server loads that length
-            if (available >= packetLength)
+            //if we havent gotten a packet header length yet
+            if (packetLength == -1)
             {
-                print("Packet Length: " + packetLength);
-                //load the packet
-                byte[] message = new byte[packetLength];
-                server.Receive(message, message.Length, 0);
+                //get the packet header
+                byte[] header = new byte[5];
+                server.Receive(header, header.Length, 0);
+                //turn bytes into string
+                string headerString = System.Text.Encoding.Default.GetString(header);
+                //get value of header string
+                int headerVal = int.Parse(headerString, System.Globalization.NumberStyles.HexNumber);
 
-                string messageString = System.Text.Encoding.Default.GetString(message);
-                //print("MESSAGE:" + messageString);
-
-                BoxingPacker packer = new BoxingPacker();
-                Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
-                string action = msg["Action"].ToString();
-
-
-                //---go through the packet and perform actions---
-                parsePacket(msg);
-
-                //reset packet length so that it knows to look for new headers
-                packetLength = -1;
+                packetLength = headerVal;
             }
+            else //if we already have a packet header length
+            {
+                int available = server.Available;
+                //wait until the server loads that length
+                if (available >= packetLength)
+                {
+                    //print("Packet Length: " + packetLength);
+                    //load the packet
+                    byte[] message = new byte[packetLength];
+                    server.Receive(message, message.Length, 0);
 
+                    string messageString = System.Text.Encoding.Default.GetString(message);
+                    //print("MESSAGE:" + messageString);
+
+                    BoxingPacker packer = new BoxingPacker();
+                    Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
+                    string action = msg["Action"].ToString();
+
+
+                    //---go through the packet and perform actions---
+                    parsePacket(msg);
+
+                    //reset packet length so that it knows to look for new headers
+                    packetLength = -1;
+                }
+
+            }
         }
 
 	}
@@ -334,7 +380,8 @@ public class Client : MonoBehaviour
 
             Dictionary<string, object> message = new Dictionary<string, object>();
             message.Add("Action", "update");
-            message.Add("ID", ((int)(LoginGUI.userID)).ToString());
+            message.Add("ID", ((LoginGUI.userID)));
+            message.Add("Username", "update");
             message.Add("X", xMovement);
             message.Add("Y", yMovement);
             message.Add("Rotation", 0);
@@ -351,14 +398,16 @@ public class Client : MonoBehaviour
 
 public class Player {
 
-    public int id;
+    public string id;
     public float x;
     public float y;
     public int health;
+    public int scraps;
+    public float lastUpdate;
     public GameObject playerObject;
     public GameObject healthBarObject;
 
-    public Player(int id) {
+    public Player(string id) {
         this.id = id;
         x = 0;
         y = 0;
@@ -366,6 +415,7 @@ public class Player {
 
     public void move(float x, float y)
     {
+        lastUpdate = Time.time;
         playerObject.GetComponent<Object_script>().setTargetPos(-99999, -99999);
         playerObject.transform.position = new Vector3(x, y, 0);
     }
@@ -374,6 +424,11 @@ public class Player {
     {
         this.health = health;
         healthBarObject.transform.localScale = new Vector3( (float)health / 100f, healthBarObject.transform.localScale.y, healthBarObject.transform.localScale.z);
+    }
+
+    public void updateScraps(int scraps)
+    {
+        this.scraps = scraps;
     }
 
 }
