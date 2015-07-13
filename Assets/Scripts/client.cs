@@ -83,6 +83,30 @@ public class Client : MonoBehaviour
 
 	}
 
+    public void sendUpgradeRequest(string upgrade)
+    {
+        BoxingPacker packer = new BoxingPacker();
+        Dictionary<string, object> message = new Dictionary<string, object>();
+        message.Add("Action", "upgrade"+upgrade);
+
+        var encodedMessage = packer.Pack(message);
+
+        server.Send(encodedMessage);
+    }
+
+    public void sendJumpRequest(float x, float y)
+    {
+        BoxingPacker packer = new BoxingPacker();
+        Dictionary<string, object> message = new Dictionary<string, object>();
+        message.Add("Action", "jump");
+        message.Add("X", x);
+        message.Add("Y", y);
+
+        var encodedMessage = packer.Pack(message);
+
+        server.Send(encodedMessage);
+    }
+
     //check if this is the main player
     public bool isThisTheClientPlayer(string id)
     {
@@ -144,7 +168,7 @@ public class Client : MonoBehaviour
         foreach (Bullet b in bulletList)
         {
             float timeElapsedSinceLastUpdate = Time.time - b.lastUpdate;
-            if (timeElapsedSinceLastUpdate >= 0.5)
+            if (timeElapsedSinceLastUpdate >= 0.25)
             {
                 UnityEngine.Object.Destroy(b.bulletObject);
                 bulletList.Remove(b);
@@ -155,7 +179,7 @@ public class Client : MonoBehaviour
         foreach (Player p in playerList)
         {
             float timeElapsedSinceLastUpdate = Time.time - p.lastUpdate;
-            if (timeElapsedSinceLastUpdate >= 0.5)
+            if (timeElapsedSinceLastUpdate >= 1.5)
             {
                 if (!isThisTheClientPlayer(p.id))
                 {
@@ -181,6 +205,7 @@ public class Client : MonoBehaviour
             newPlayer.x = x;
             newPlayer.y = y;
             newPlayer.health = health;
+            newPlayer.lastUpdate = Time.time;
             //make camera follow this player if it is the clients player
             if (isThisTheClientPlayer(id))
             {
@@ -192,6 +217,7 @@ public class Client : MonoBehaviour
             t[2].GetComponent<TextMesh>().text = id;
             //add new object to player list
             playerList.Add(newPlayer);
+            //print("Player created!");
 
         }
         //if the player has already been created, edit it
@@ -215,8 +241,8 @@ public class Client : MonoBehaviour
             string id = (msg["ID"].ToString());
             int health = int.Parse(msg["Health"].ToString());
             int scraps = int.Parse(msg["Scraps"].ToString());
-            //print("X: " + x + ", Y: " + y);
-            //int health = int.Parse(msg["Health"].ToString());
+            //print("ID: " + id + ", X: " + x + ", Y: " + y);
+
             //get other player data arrays
             List<object> otherPlayerIDs = (List<object>)msg["OtherPlayerIDs"];
             List<object> otherPlayerXs = (List<object>)msg["OtherPlayerXs"];
@@ -351,13 +377,11 @@ public class Client : MonoBehaviour
                     byte[] message = new byte[packetLength];
                     server.Receive(message, message.Length, 0);
 
-                    string messageString = System.Text.Encoding.Default.GetString(message);
+                    //string messageString = System.Text.Encoding.Default.GetString(message);
                     //print("MESSAGE:" + messageString);
 
                     BoxingPacker packer = new BoxingPacker();
                     Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
-                    string action = msg["Action"].ToString();
-
 
                     //---go through the packet and perform actions---
                     parsePacket(msg);
@@ -388,7 +412,7 @@ public class Client : MonoBehaviour
 
             var encodedMessage = packer.Pack(message);
 
-            int i = server.Send(encodedMessage);
+            server.Send(encodedMessage);
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }

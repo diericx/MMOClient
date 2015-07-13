@@ -43,7 +43,25 @@ public class userInput : MonoBehaviour {
         {
 			clientScript.xMovement = 0;
         }
+
+        //Upgrade buttons
+        if (Input.GetKeyDown("z"))
+        {
+            print("Speed upgrade request sent...");
+            clientScript.sendUpgradeRequest("Speed");
+        }
+
+        if (Input.GetKeyDown("space"))
+        {
+            //get mouse world positon
+            Vector3 screenPoint = Input.mousePosition;
+            screenPoint.z = 20.0f; //distance of the plane from the camera
+            var mouseposition = Camera.main.ScreenToWorldPoint(screenPoint);
+
+            clientScript.sendJumpRequest(mouseposition.x, mouseposition.y);
+        }
         
+        //shooting
 		if (Input.GetMouseButtonDown(0)) {
 			//get mouse world position
             float angleInDegrees;
