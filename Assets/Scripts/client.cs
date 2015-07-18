@@ -228,7 +228,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    void manageIncomingPlayerData(string id, float x, float y, int health)
+    void manageIncomingPlayerData(string id, float x, float y, float health)
     {
         //check if player is already created (already in the list)
         Player foundPlayer = isPlayerAlreadyCreated(id);
@@ -266,7 +266,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    void manageIncomingNpcData(int id, int type, float x, float y, int health)
+    void manageIncomingNpcData(int id, int type, float x, float y, float health)
     {
         Npc foundNpc = isNpcAlreadyCreated(id);
 
@@ -303,12 +303,12 @@ public class Client : MonoBehaviour
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
             string id = (msg["ID"].ToString());
-            int health = int.Parse(msg["Health"].ToString());
-            int healthCap = int.Parse(msg["HealthCap"].ToString());
-            int energy = int.Parse(msg["Energy"].ToString());
-            int energyCap = int.Parse(msg["EnergyCap"].ToString());
-            int shield = int.Parse(msg["Shield"].ToString());
-            int shieldCap = int.Parse(msg["ShieldCap"].ToString());
+            float health = float.Parse(msg["Health"].ToString());
+            float healthCap = float.Parse(msg["HealthCap"].ToString());
+            float energy = float.Parse(msg["Energy"].ToString());
+            float energyCap = float.Parse(msg["EnergyCap"].ToString());
+            float shield = float.Parse(msg["Shield"].ToString());
+            float shieldCap = float.Parse(msg["ShieldCap"].ToString());
             int scraps = int.Parse(msg["Scraps"].ToString());
             int dmg = int.Parse(msg["Damage"].ToString());
             float speed = float.Parse(msg["Speed"].ToString());
@@ -361,7 +361,7 @@ public class Client : MonoBehaviour
                 string otherPlayerID = (string)(otherPlayerIDs[i]);
                 float otherPlayerX = float.Parse(otherPlayerXs[i].ToString());
                 float otherPlayerY = float.Parse(otherPlayerYs[i].ToString());
-                int otherPlayerHlth = int.Parse(otherPlayerHlths[i].ToString());
+                float otherPlayerHlth = float.Parse(otherPlayerHlths[i].ToString());
                 //print(otherPlayerID + "; " + otherPlayerX + "; " + otherPlayerY);
                 //manage the data
                 manageIncomingPlayerData(otherPlayerID, otherPlayerX, otherPlayerY, otherPlayerHlth);
@@ -412,7 +412,7 @@ public class Client : MonoBehaviour
                 int npcType = int.Parse(npcTypes[i].ToString());
                 float npcX = float.Parse(npcXs[i].ToString());
                 float npcY = float.Parse(npcYs[i].ToString());
-                int npcHlth = int.Parse(npcHlths[i].ToString());
+                float npcHlth = float.Parse(npcHlths[i].ToString());
 
                 manageIncomingNpcData(npcID, npcType, npcX, npcY, npcHlth);
             }
@@ -551,7 +551,7 @@ public class Player {
     public string id;
     public float x;
     public float y;
-    public int health;
+    public float health;
     public int scraps;
     public float lastUpdate;
     public GameObject playerObject;
@@ -570,7 +570,7 @@ public class Player {
         playerObject.transform.position = new Vector3(x, y, 0);
     }
 
-    public void updateHealth(int health)
+    public void updateHealth(float health)
     {
         this.health = health;
         healthBarObject.transform.localScale = new Vector3( (float)health / 100f, healthBarObject.transform.localScale.y, healthBarObject.transform.localScale.z);

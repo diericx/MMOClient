@@ -51,6 +51,18 @@ public class userInput : MonoBehaviour {
             clientScript.sendUpgradeRequest("Speed");
         }
 
+        if (Input.GetKeyDown("x"))
+        {
+            print("Speed upgrade request sent...");
+            clientScript.sendUpgradeRequest("ShieldCap");
+        }
+
+        if (Input.GetKeyDown("c"))
+        {
+            print("Speed upgrade request sent...");
+            clientScript.sendUpgradeRequest("EnergyRegen");
+        }
+
         if (Input.GetKeyDown("space"))
         {
             //get mouse world positon
