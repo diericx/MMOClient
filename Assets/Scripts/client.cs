@@ -12,6 +12,7 @@ public class Client : MonoBehaviour
 {
 
     ArrayList playerList = new ArrayList();
+    ArrayList npcList = new ArrayList();
 	ArrayList bulletList = new ArrayList();
 
     Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -19,8 +20,10 @@ public class Client : MonoBehaviour
     private const float SERVER_SEND_RATE = 0.15f;
     private const float SERVER_GET_RATE = 0.10f;
 
+    public GameUI_Controller GUIController;
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
+    public GameObject npcPrefab;
     public GameObject scrapsText;
     
     [HideInInspector]
@@ -150,6 +153,22 @@ public class Client : MonoBehaviour
 		return response;
 	}
 
+    //check if the npc is already in the list
+    public Npc isNpcAlreadyCreated(int id)
+    {
+        Npc response = null;
+
+        foreach (Npc n in npcList)
+        {
+            if (n.id == id)
+            {
+                response = n;
+            }
+        }
+
+        return response;
+    }
+
 	//FUNCTUONS FOR INSTANTIATING GAME OBJECTS
     public GameObject instantiateNewPlayerObject()
     {
@@ -163,8 +182,15 @@ public class Client : MonoBehaviour
 		return bulletObj;
 	}
 
+    public GameObject instantiateNewNpcObject(float x, float y)
+    {
+        GameObject npcObject = (GameObject)Instantiate(npcPrefab, new Vector3(x, y, 0), Quaternion.identity);
+        return npcObject;
+    }
+
     void checkObjectsForExpiration()
     {
+        //Check bullets for expiration
         foreach (Bullet b in bulletList)
         {
             float timeElapsedSinceLastUpdate = Time.time - b.lastUpdate;
@@ -175,7 +201,7 @@ public class Client : MonoBehaviour
                 break;
             }
         }
-
+        //Check players for expiration
         foreach (Player p in playerList)
         {
             float timeElapsedSinceLastUpdate = Time.time - p.lastUpdate;
@@ -187,6 +213,17 @@ public class Client : MonoBehaviour
                     playerList.Remove(p);
                     break;
                 }
+            }
+        }
+        //Check npcs for expiration
+        foreach (Npc npc in npcList)
+        {
+            float timeElapsedSinceLastUpdate = Time.time - npc.lastUpdate;
+            if (timeElapsedSinceLastUpdate >= 0.25)
+            {
+                UnityEngine.Object.Destroy(npc.npcObject);
+                npcList.Remove(npc);
+                break;
             }
         }
     }
@@ -206,15 +243,16 @@ public class Client : MonoBehaviour
             newPlayer.y = y;
             newPlayer.health = health;
             newPlayer.lastUpdate = Time.time;
-            //make camera follow this player if it is the clients player
-            if (isThisTheClientPlayer(id))
-            {
-                Camera.main.transform.parent = newPlayer.playerObject.transform;
-            }
             //add health bar
             Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
             newPlayer.healthBarObject = t[1].gameObject;
             t[2].GetComponent<TextMesh>().text = id;
+            //make camera follow this player if it is the clients player
+            if (isThisTheClientPlayer(id))
+            {
+                Camera.main.transform.parent = newPlayer.playerObject.transform;
+                t[1].gameObject.SetActive(false);
+            }
             //add new object to player list
             playerList.Add(newPlayer);
             //print("Player created!");
@@ -225,6 +263,32 @@ public class Client : MonoBehaviour
         {
             foundPlayer.move(x, y);
             foundPlayer.updateHealth(health);
+        }
+    }
+
+    void manageIncomingNpcData(int id, int type, float x, float y, int health)
+    {
+        Npc foundNpc = isNpcAlreadyCreated(id);
+
+        //if the player isn't already created
+        if (foundNpc == null)
+        {
+            Debug.Log("Bullet needs to be made");
+            Npc newNpc = new Npc(id);
+            newNpc.npcObject = instantiateNewNpcObject(x, y);
+            newNpc.move(x, y);
+            newNpc.npcObject.transform.eulerAngles = new Vector3(0, 0, 0);
+            newNpc.x = x;
+            newNpc.y = y;
+            //add new object to player list
+            npcList.Add(newNpc);
+
+        }
+        //if the bullet has already been created, edit it
+        else
+        {
+            //Debug.Log("Bullet found");
+            foundNpc.move(x, y);
         }
     }
 
@@ -240,7 +304,14 @@ public class Client : MonoBehaviour
             float y = float.Parse(msg["Y"].ToString());
             string id = (msg["ID"].ToString());
             int health = int.Parse(msg["Health"].ToString());
+            int healthCap = int.Parse(msg["HealthCap"].ToString());
+            int energy = int.Parse(msg["Energy"].ToString());
+            int energyCap = int.Parse(msg["EnergyCap"].ToString());
+            int shield = int.Parse(msg["Shield"].ToString());
+            int shieldCap = int.Parse(msg["ShieldCap"].ToString());
             int scraps = int.Parse(msg["Scraps"].ToString());
+            int dmg = int.Parse(msg["Damage"].ToString());
+            float speed = float.Parse(msg["Speed"].ToString());
             //print("ID: " + id + ", X: " + x + ", Y: " + y);
 
             //get other player data arrays
@@ -249,13 +320,41 @@ public class Client : MonoBehaviour
             List<object> otherPlayerYs = (List<object>)msg["OtherPlayerYs"];
             List<object> otherPlayerHlths = (List<object>)msg["OtherPlayerHlths"];
 
-            //update scraps text object
-            scrapsText.GetComponent<Text>().text = "Scraps: " + scraps;
+            //get bullet arrays
+            List<object> bulletIDs = (List<object>)msg["BulletIDs"];
+            List<object> bulletXs = (List<object>)msg["BulletXs"];
+            List<object> bulletYs = (List<object>)msg["BulletYs"];
+            List<object> bulletRots = (List<object>)msg["BulletRots"];
+
+            //get NPC arrays
+            List<object> npcIDs = (List<object>)msg["NpcIDs"];
+            List<object> npcTypes = (List<object>)msg["NpcTypes"];
+            List<object> npcXs = (List<object>)msg["NpcXs"];
+            List<object> npcYs = (List<object>)msg["NpcYs"];
+            List<object> npcHlths = (List<object>)msg["NpcHlths"];
+
+            //update hud scraps text
+            GUIController.updateScrapsTxt(scraps);
+
+            //update dmg text
+            GUIController.updateDmgTxt(dmg);
+
+            //update hud health bar
+            GUIController.updateCurrentHealth(health, healthCap);
+
+            //update energy hud bar
+            GUIController.updateCurrentEnergy(energy, energyCap);
+
+            //update shield bars
+            GUIController.updateCurrentShield(shield, shieldCap);
+            
+            //update hud speed
+            GUIController.updateCurrentSpeed(speed);
 
             //Manage clients player data
             manageIncomingPlayerData(id, x, y, health);
 
-            //Manage other player data
+            //================Other Player DATA======================
             for (int i = 0; i < otherPlayerIDs.Count; i++)
             {
                 //get data from array
@@ -270,11 +369,6 @@ public class Client : MonoBehaviour
 
 
             //================BULLET DATA======================
-            //get bullet arrays
-            List<object> bulletIDs = (List<object>)msg["BulletIDs"];
-            List<object> bulletXs = (List<object>)msg["BulletXs"];
-            List<object> bulletYs = (List<object>)msg["BulletYs"];
-            List<object> bulletRots = (List<object>)msg["BulletRots"];
 
             for (int i = 0; i < bulletIDs.Count; i++)
             {
@@ -306,6 +400,21 @@ public class Client : MonoBehaviour
                     //Debug.Log("Bullet found");
                     foundBullet.move(bulletX, bulletY);
                 }
+            }
+
+
+            //================NPC DATA======================
+
+            for (int i = 0; i < npcIDs.Count; i++)
+            {
+                //get data from arrays
+                int npcID = int.Parse(npcIDs[i].ToString());
+                int npcType = int.Parse(npcTypes[i].ToString());
+                float npcX = float.Parse(npcXs[i].ToString());
+                float npcY = float.Parse(npcYs[i].ToString());
+                int npcHlth = int.Parse(npcHlths[i].ToString());
+
+                manageIncomingNpcData(npcID, npcType, npcX, npcY, npcHlth);
             }
 
 
@@ -401,14 +510,31 @@ public class Client : MonoBehaviour
 		{
             //Debug.Log("SENDING");
             BoxingPacker packer = new BoxingPacker();
+            int angleInDegrees = 0;
+
+            //get mouse world positon
+            Vector3 screenPoint = Input.mousePosition;
+            screenPoint.z = 20.0f; //distance of the plane from the camera
+            var mouseposition = Camera.main.ScreenToWorldPoint(screenPoint);
+            //get player object
+            Player p = isPlayerAlreadyCreated((LoginGUI.userID));
+            //if player is found, calculate angle
+            if (p != null)
+            {
+                float deltaX = mouseposition.x - p.playerObject.transform.position.x;
+                float deltaY = mouseposition.y - p.playerObject.transform.position.y;
+                float angle = (Mathf.Atan2(deltaY, deltaX) * 180 / Mathf.PI) - 90;
+                angleInDegrees = Convert.ToInt32(angle);
+            }
 
             Dictionary<string, object> message = new Dictionary<string, object>();
             message.Add("Action", "update");
             message.Add("ID", ((LoginGUI.userID)));
-            message.Add("Username", "update");
+            message.Add("Shooting", Input.GetMouseButton(0));
+            //message.Add("Username", "update");
             message.Add("X", xMovement);
             message.Add("Y", yMovement);
-            message.Add("Rotation", 0);
+            message.Add("Rotation", angleInDegrees);
 
             var encodedMessage = packer.Pack(message);
 
@@ -479,4 +605,32 @@ public class Bullet {
 		//bulletObject.transform.position = new Vector3(x, y, 0);
 	}
 	
+}
+
+
+public class Npc
+{
+
+    public int id;
+    public int type;
+    public float x;
+    public float y;
+    public GameObject npcObject;
+    public float lastUpdate;
+
+    public Npc(int id)
+    {
+        lastUpdate = Time.time;
+        this.id = id;
+        x = 0;
+        y = 0;
+    }
+
+    public void move(float x, float y)
+    {
+        lastUpdate = Time.time;
+        npcObject.GetComponent<Object_script>().setTargetPos(x, y);
+        //bulletObject.transform.position = new Vector3(x, y, 0);
+    }
+
 }
