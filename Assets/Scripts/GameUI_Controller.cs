@@ -4,19 +4,22 @@ using System.Collections;
 using System;
 
 public class GameUI_Controller : MonoBehaviour {
+    public GameObject upgradeGUI;
+
     public GameObject scrapsTxt;
     public GameObject dmgTxt;
     public GameObject currentHealthImg;
     public GameObject healthValueText;
-    public GameObject currentEnergyImg;
-    public GameObject energyValueText;
-    public GameObject currentSpeedImg;
-    public GameObject speedValueText;
     public GameObject currentShieldImg;
+
+    public GameObject currentEnergyObj;
+    public GameObject speedValueText;
     public GameObject shieldValueText;
+    public GameObject energyRegenText;
+    public GameObject shieldRegenText;
 	// Use this for initialization
 	void Start () {
-        
+
 	}
 	
 	// Update is called once per frame
@@ -31,7 +34,7 @@ public class GameUI_Controller : MonoBehaviour {
 
     public void updateDmgTxt(int dmg)
     {
-        dmgTxt.GetComponent<Text>().text = "Damage: " + dmg;
+        dmgTxt.GetComponent<Text>().text = dmg.ToString();
     }
 
     public void updateCurrentHealth(float health, float healthCap)
@@ -48,11 +51,11 @@ public class GameUI_Controller : MonoBehaviour {
     public void updateCurrentEnergy(float energy, float energyCap)
     {
         //update text
-        energyValueText.GetComponent<Text>().text = energy + "/" + energyCap;
+        //energyValueText.GetComponent<Text>().text = energy + "/" + energyCap;
         //update bars
         float percent = ((float)energy / (float)energyCap) * 100;
         int rounded = Convert.ToInt32(percent);
-        currentEnergyImg.GetComponent<RectTransform>().sizeDelta = new Vector2(rounded, 100);
+        currentEnergyObj.GetComponent<ProgressBar.ProgressBarBehaviour>().Value = rounded;
     }
 
     public void updateCurrentShield(float shield, float shieldCap)
@@ -69,12 +72,22 @@ public class GameUI_Controller : MonoBehaviour {
         //currentShieldImg.GetComponent<RectTransform>().sizeDelta = new Vector2(rounded, 100);
     }
 
+    public void updateShieldRegen(float regen)
+    {
+        shieldRegenText.GetComponent<Text>().text = regen.ToString();
+    }
+
+    public void updateEnergyRegen(float regen)
+    {
+        energyRegenText.GetComponent<Text>().text = regen.ToString();
+    }
+
     public void updateCurrentSpeed(float speed)
     {
         //update text
         speedValueText.GetComponent<Text>().text = (speed*10).ToString();
         //update bars
-        currentSpeedImg.GetComponent<RectTransform>().sizeDelta = new Vector2(speed*10, 100);
+        //currentSpeedImg.GetComponent<RectTransform>().sizeDelta = new Vector2(speed*10, 100);
     }
 
 

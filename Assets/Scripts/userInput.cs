@@ -3,6 +3,7 @@ using System.Collections;
 
 public class userInput : MonoBehaviour {
     public Client clientScript;
+    public GameObject upgradeGUI;
     private float playerSpeed = 0f;
 	void Start () {
 	
@@ -45,22 +46,9 @@ public class userInput : MonoBehaviour {
         }
 
         //Upgrade buttons
-        if (Input.GetKeyDown("z"))
+        if (Input.GetKeyDown("q"))
         {
-            print("Speed upgrade request sent...");
-            clientScript.sendUpgradeRequest("Speed");
-        }
-
-        if (Input.GetKeyDown("x"))
-        {
-            print("Speed upgrade request sent...");
-            clientScript.sendUpgradeRequest("ShieldCap");
-        }
-
-        if (Input.GetKeyDown("c"))
-        {
-            print("Speed upgrade request sent...");
-            clientScript.sendUpgradeRequest("EnergyRegen");
+            upgradeGUI.SetActive(!upgradeGUI.activeSelf);
         }
 
         if (Input.GetKeyDown("space"))

@@ -25,6 +25,8 @@ public class Client : MonoBehaviour
     public GameObject bulletPrefab;
     public GameObject npcPrefab;
     public GameObject scrapsText;
+
+    public static System.Random r;
     
     [HideInInspector]
     public int xMovement = 0;
@@ -56,6 +58,8 @@ public class Client : MonoBehaviour
         }
 
         StartCoroutine(sendData());
+
+        r = new System.Random();
 
     }
 
@@ -307,8 +311,10 @@ public class Client : MonoBehaviour
             float healthCap = float.Parse(msg["HealthCap"].ToString());
             float energy = float.Parse(msg["Energy"].ToString());
             float energyCap = float.Parse(msg["EnergyCap"].ToString());
+            float energyRegen = float.Parse(msg["EnergyRegen"].ToString());
             float shield = float.Parse(msg["Shield"].ToString());
             float shieldCap = float.Parse(msg["ShieldCap"].ToString());
+            float shieldRegen = float.Parse(msg["ShieldRegen"].ToString());
             int scraps = int.Parse(msg["Scraps"].ToString());
             int dmg = int.Parse(msg["Damage"].ToString());
             float speed = float.Parse(msg["Speed"].ToString());
@@ -347,6 +353,12 @@ public class Client : MonoBehaviour
 
             //update shield bars
             GUIController.updateCurrentShield(shield, shieldCap);
+
+            //update regens
+            GUIController.updateEnergyRegen(energyRegen);
+            GUIController.updateShieldRegen(shieldRegen);
+
+            //update Capacities
             
             //update hud speed
             GUIController.updateCurrentSpeed(speed);

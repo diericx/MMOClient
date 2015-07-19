@@ -134,7 +134,7 @@ namespace ProgressBar
 
                 //We set the Filler to be the new value
                 //We don't pass the value as a percentage because we directly use SetFillerSize here which takes a width as a parameter.
-                SetFillerSize(TransitoryValue);
+                SetFillerSize(m_Value.AsFloat);
 
                 //If we chose to trigger a method when finished AND
                 //   the animation isn't playing anymore AND

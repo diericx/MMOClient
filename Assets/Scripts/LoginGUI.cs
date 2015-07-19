@@ -14,6 +14,9 @@ public class LoginGUI : MonoBehaviour {
     public Text ipText;
     public Text portText;
     public Text inputFieldTextObject;
+    public Texture2D cursor;
+    public CursorMode cursorMode = CursorMode.Auto;
+    public Vector2 hotSpot = Vector2.zero;
     [HideInInspector]
     public static string username = "zac";
     [HideInInspector]
@@ -32,6 +35,8 @@ public class LoginGUI : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        Cursor.SetCursor(cursor, hotSpot, cursorMode);
+
 		baseURL = "http://" + "192.168.0.112" + ":3000/api/v1/";
 
         errorText = errorTextGameObject.GetComponent<Text>();
