@@ -308,13 +308,13 @@ public class Client : MonoBehaviour
             float y = float.Parse(msg["Y"].ToString());
             string id = (msg["ID"].ToString());
             float health = float.Parse(msg["Health"].ToString());
-            float healthCap = float.Parse(msg["HealthCap"].ToString());
+            int healthCap = int.Parse(msg["HealthCap"].ToString());
             float energy = float.Parse(msg["Energy"].ToString());
-            float energyCap = float.Parse(msg["EnergyCap"].ToString());
-            float energyRegen = float.Parse(msg["EnergyRegen"].ToString());
+            int energyCap = int.Parse(msg["EnergyCap"].ToString());
+            int energyRegen = int.Parse(msg["EnergyRegen"].ToString());
             float shield = float.Parse(msg["Shield"].ToString());
-            float shieldCap = float.Parse(msg["ShieldCap"].ToString());
-            float shieldRegen = float.Parse(msg["ShieldRegen"].ToString());
+            int shieldCap = int.Parse(msg["ShieldCap"].ToString());
+            int shieldRegen = int.Parse(msg["ShieldRegen"].ToString());
             int scraps = int.Parse(msg["Scraps"].ToString());
             int dmg = int.Parse(msg["Damage"].ToString());
             float speed = float.Parse(msg["Speed"].ToString());
@@ -342,26 +342,25 @@ public class Client : MonoBehaviour
             //update hud scraps text
             GUIController.updateScrapsTxt(scraps);
 
-            //update dmg text
-            GUIController.updateDmgTxt(dmg);
+            ////update dmg text
+            //GUIController.updateDmgTxt(dmg);
 
-            //update hud health bar
+            ////update hud health bar
             GUIController.updateCurrentHealth(health, healthCap);
 
-            //update energy hud bar
-            GUIController.updateCurrentEnergy(energy, energyCap);
+            ////update energy hud bar
+            GUIController.updateEnergyHUD(energy, energyCap);
 
-            //update shield bars
-            GUIController.updateCurrentShield(shield, shieldCap);
+            ////update shield bars
+            GUIController.updateShieldHUD(shield, shieldCap);
 
-            //update regens
-            GUIController.updateEnergyRegen(energyRegen);
-            GUIController.updateShieldRegen(shieldRegen);
+            ////update stats
+            GUIController.updateStats(msg);
 
             //update Capacities
             
             //update hud speed
-            GUIController.updateCurrentSpeed(speed);
+            //GUIController.updateCurrentSpeed(speed);
 
             //Manage clients player data
             manageIncomingPlayerData(id, x, y, health);
