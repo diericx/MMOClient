@@ -1,0 +1,9 @@
+{
+  "hull1":"Prefabs/Gear/Hull/hull1",
+  "hull2":"Prefabs/Gear/Hull/hull2",
+  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
+  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
+  "resources":"resources",
+  "wing1":"Prefabs/Gear/Wing/wing1",
+  "wing2":"Prefabs/Gear/Wing/wing2"
+}

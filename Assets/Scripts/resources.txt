@@ -1,0 +1,4 @@
+{
+  "Asteroid":"Asteroid",
+  "bullet_prefab":"bullet_prefab"
+}

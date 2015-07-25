@@ -21,6 +21,7 @@ public class Client : MonoBehaviour
     private const float SERVER_GET_RATE = 0.10f;
 
     public GameUI_Controller GUIController;
+    public Inventory_Controller inventoryController;
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
     public GameObject npcPrefab;
@@ -61,6 +62,9 @@ public class Client : MonoBehaviour
 
         r = new System.Random();
 
+        PrefabLoader.Init();
+        PrefabLoader.LoadAllPrefabs();
+        //PrefabLoader.Instantiate("bullet_prefab", new Vector3(0, 0, 0), Quaternion.identity);
     }
 
     
@@ -95,6 +99,31 @@ public class Client : MonoBehaviour
         BoxingPacker packer = new BoxingPacker();
         Dictionary<string, object> message = new Dictionary<string, object>();
         message.Add("Action", "upgrade"+upgrade);
+
+        var encodedMessage = packer.Pack(message);
+
+        server.Send(encodedMessage);
+    }
+
+    public void sendEquipRequest(int index)
+    {
+        print("SEND EQUIP REQ");
+        BoxingPacker packer = new BoxingPacker();
+        Dictionary<string, object> message = new Dictionary<string, object>();
+        message.Add("Action", "equip");
+        message.Add("Value", index);
+
+        var encodedMessage = packer.Pack(message);
+
+        server.Send(encodedMessage);
+    }
+
+    public void sendDropRequest(int index)
+    {
+        BoxingPacker packer = new BoxingPacker();
+        Dictionary<string, object> message = new Dictionary<string, object>();
+        message.Add("Action", "drop");
+        message.Add("Value", index);
 
         var encodedMessage = packer.Pack(message);
 
@@ -232,7 +261,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    void manageIncomingPlayerData(string id, float x, float y, float health)
+    void manageIncomingPlayerData(string id, List<object> gear, float x, float y, int rotation, float health)
     {
         //check if player is already created (already in the list)
         Player foundPlayer = isPlayerAlreadyCreated(id);
@@ -247,6 +276,9 @@ public class Client : MonoBehaviour
             newPlayer.y = y;
             newPlayer.health = health;
             newPlayer.lastUpdate = Time.time;
+            //set gear
+            newPlayer.setHull(1);
+            newPlayer.setWings(1, false);
             //add health bar
             Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
             newPlayer.healthBarObject = t[1].gameObject;
@@ -266,18 +298,20 @@ public class Client : MonoBehaviour
         else
         {
             foundPlayer.move(x, y);
+            foundPlayer.rotate(rotation);
             foundPlayer.updateHealth(health);
+            foundPlayer.setWings( int.Parse(gear[2].ToString()), false );
+            foundPlayer.setHull( int.Parse(gear[0].ToString()) );
         }
     }
 
-    void manageIncomingNpcData(int id, int type, float x, float y, float health)
+    void manageIncomingNpcData(int id, int type, float x, float y, int rotation, float health)
     {
         Npc foundNpc = isNpcAlreadyCreated(id);
 
         //if the player isn't already created
         if (foundNpc == null)
         {
-            Debug.Log("Bullet needs to be made");
             Npc newNpc = new Npc(id);
             newNpc.npcObject = instantiateNewNpcObject(x, y);
             newNpc.move(x, y);
@@ -306,6 +340,7 @@ public class Client : MonoBehaviour
             //parse all variables
             float x = float.Parse(msg["X"].ToString());
             float y = float.Parse(msg["Y"].ToString());
+            int rotation = int.Parse(msg["Rotation"].ToString());
             string id = (msg["ID"].ToString());
             float health = float.Parse(msg["Health"].ToString());
             int healthCap = int.Parse(msg["HealthCap"].ToString());
@@ -318,13 +353,18 @@ public class Client : MonoBehaviour
             int scraps = int.Parse(msg["Scraps"].ToString());
             int dmg = int.Parse(msg["Damage"].ToString());
             float speed = float.Parse(msg["Speed"].ToString());
-            //print("ID: " + id + ", X: " + x + ", Y: " + y);
+            //Player inventory data
+            List<object> gear = (List<object>)msg["Gear"];
+            List<object> inventoryTypes = (List<object>)msg["InventoryTypes"];
+            List<object> inventoryIDs = (List<object>)msg["InventoryIDs"];
 
             //get other player data arrays
             List<object> otherPlayerIDs = (List<object>)msg["OtherPlayerIDs"];
             List<object> otherPlayerXs = (List<object>)msg["OtherPlayerXs"];
             List<object> otherPlayerYs = (List<object>)msg["OtherPlayerYs"];
+            List<object> otherPlayerRots = (List<object>)msg["OtherPlayerRots"];
             List<object> otherPlayerHlths = (List<object>)msg["OtherPlayerHlths"];
+            List<object> otherPlayerGearSets = (List<object>)msg["OtherPlayerGearSets"];
 
             //get bullet arrays
             List<object> bulletIDs = (List<object>)msg["BulletIDs"];
@@ -338,6 +378,9 @@ public class Client : MonoBehaviour
             List<object> npcXs = (List<object>)msg["NpcXs"];
             List<object> npcYs = (List<object>)msg["NpcYs"];
             List<object> npcHlths = (List<object>)msg["NpcHlths"];
+
+            //update inventory
+            inventoryController.updateInventory(inventoryTypes, inventoryIDs);
 
             //update hud scraps text
             GUIController.updateScrapsTxt(scraps);
@@ -363,7 +406,7 @@ public class Client : MonoBehaviour
             //GUIController.updateCurrentSpeed(speed);
 
             //Manage clients player data
-            manageIncomingPlayerData(id, x, y, health);
+            manageIncomingPlayerData(id, gear, x, y, rotation, health);
 
             //================Other Player DATA======================
             for (int i = 0; i < otherPlayerIDs.Count; i++)
@@ -372,10 +415,12 @@ public class Client : MonoBehaviour
                 string otherPlayerID = (string)(otherPlayerIDs[i]);
                 float otherPlayerX = float.Parse(otherPlayerXs[i].ToString());
                 float otherPlayerY = float.Parse(otherPlayerYs[i].ToString());
+                int otherPlayerRot = int.Parse(otherPlayerRots[i].ToString());
                 float otherPlayerHlth = float.Parse(otherPlayerHlths[i].ToString());
+                List<object> otherPlayerGearSet = (List<object>)otherPlayerGearSets[i];
                 //print(otherPlayerID + "; " + otherPlayerX + "; " + otherPlayerY);
                 //manage the data
-                manageIncomingPlayerData(otherPlayerID, otherPlayerX, otherPlayerY, otherPlayerHlth);
+                manageIncomingPlayerData(otherPlayerID, otherPlayerGearSet, otherPlayerX, otherPlayerY, otherPlayerRot, otherPlayerHlth);
             }
 
 
@@ -425,7 +470,7 @@ public class Client : MonoBehaviour
                 float npcY = float.Parse(npcYs[i].ToString());
                 float npcHlth = float.Parse(npcHlths[i].ToString());
 
-                manageIncomingNpcData(npcID, npcType, npcX, npcY, npcHlth);
+                manageIncomingNpcData(npcID, npcType, npcX, npcY, 0, npcHlth);
             }
 
 
@@ -563,10 +608,16 @@ public class Player {
     public float x;
     public float y;
     public float health;
+    public int rotation;
     public int scraps;
     public float lastUpdate;
+    private int wingID;
+    private int hullID;
     public GameObject playerObject;
     public GameObject healthBarObject;
+    public GameObject hull;
+    public GameObject rightWing;
+    public GameObject leftWing;
 
     public Player(string id) {
         this.id = id;
@@ -579,6 +630,93 @@ public class Player {
         lastUpdate = Time.time;
         playerObject.GetComponent<Object_script>().setTargetPos(-99999, -99999);
         playerObject.transform.position = new Vector3(x, y, 0);
+    }
+
+    public void rotate(int rotation)
+    {
+        hull.transform.eulerAngles = new Vector3(0, 0, rotation);
+    }
+
+    public void setHull(int id)
+    {
+        if (hullID != id)
+        {
+            hullID = id;
+            //delete old hull if it is created
+            if (hull != null)
+            {
+                UnityEngine.Object.Destroy(hull);
+            }
+
+            //make sure playerObject is created
+            if (playerObject != null)
+            {
+                string hullObjID = "hull" + id.ToString();
+                hull = PrefabLoader.Instantiate(hullObjID, playerObject.transform.position, playerObject.transform.rotation);
+                hull.transform.parent = playerObject.transform;
+                setWings(wingID, true);
+            }
+        }
+
+    }
+
+    public void setWings(int id, bool ignoreIDCheck)
+    {
+        if ( (wingID != id || ignoreIDCheck == true) && id != 0 )
+        {
+            wingID = id;
+            //delete old wings
+            if (rightWing != null)
+            {
+                UnityEngine.Object.Destroy(rightWing);
+            }
+            if (leftWing != null)
+            {
+                UnityEngine.Object.Destroy(leftWing);
+            }
+
+            string wingObjID = "wing" + id.ToString();
+            //spawn left wing
+            if (hull != null)
+            {
+                hull.transform.rotation = Quaternion.Euler(0, 0, 0);
+                //spawn left wing
+                Transform playerLeftJoint = findJoint(hull.transform, "leftJoint");
+                leftWing = PrefabLoader.Instantiate(wingObjID, playerObject.transform.position, playerObject.transform.rotation);
+                Transform leftWingConnectorJ = findJoint(leftWing.transform, "connectorJoint");
+                leftWing.transform.position = playerLeftJoint.transform.position - leftWingConnectorJ.transform.localPosition;
+                leftWing.transform.parent = playerLeftJoint;
+                //spawn right wing
+                Transform playerRightJ = findJoint(hull.transform, "rightJoint");
+                rightWing = PrefabLoader.Instantiate(wingObjID, playerObject.transform.position, playerObject.transform.rotation);
+                rightWing.transform.localScale = new Vector3(-1, 1, 1);
+                Transform rightWingConnectorJ = findJoint(rightWing.transform, "connectorJoint");
+                rightWing.transform.position = playerRightJ.transform.position + rightWingConnectorJ.transform.localPosition;
+                rightWing.transform.parent = playerRightJ;
+            }
+        }
+    }
+
+    private Transform findJoint(Transform t, string name)
+    {
+        int foundIndex = -1;
+        Transform[] children = t.GetComponentsInChildren<Transform>();
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (children[i].name == name)
+            {
+                foundIndex = i;
+            }
+        }
+
+        if (foundIndex == -1)
+        {
+            return null;
+        }
+        else
+        {
+            return children[foundIndex];
+        }
     }
 
     public void updateHealth(float health)

@@ -44,9 +44,9 @@ public class Object_script : MonoBehaviour {
 			//transform.position = new Vector3(transform.position.x, targetY, 0);
         }
 
-        //if (shouldRotate)
-        //{
-        //    transform.Rotate(rot.x * Time.deltaTime, rot.y * Time.deltaTime, rot.z * Time.deltaTime);
-        //}
+        if (shouldRotate)
+        {
+            transform.Rotate(rot.x * Time.deltaTime, rot.y * Time.deltaTime, rot.z * Time.deltaTime);
+        }
 	}
 }
