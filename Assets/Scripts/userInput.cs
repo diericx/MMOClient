@@ -5,6 +5,7 @@ using System;
 public class userInput : MonoBehaviour {
     public Client clientScript;
     public GameObject upgradeGUI;
+    public GameObject inventoryGUI;
     private float playerSpeed = 0f;
 	void Start () {
 	
@@ -66,6 +67,11 @@ public class userInput : MonoBehaviour {
         {
             upgradeGUI.SetActive(!upgradeGUI.activeSelf);
         }
+        if (Input.GetKeyDown("i"))
+        {
+            inventoryGUI.SetActive(!inventoryGUI.activeSelf);
+        }
+
 
         if (Input.GetKeyDown("space"))
         {

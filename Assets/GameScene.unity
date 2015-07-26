@@ -5919,6 +5919,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clientScript: {fileID: 1053178315}
   upgradeGUI: {fileID: 1066163502}
+  inventoryGUI: {fileID: 1356463889}
 --- !u!1 &1777532386
 GameObject:
   m_ObjectHideFlags: 0
