@@ -41,7 +41,7 @@ public class LoginGUI : MonoBehaviour {
 
         errorText = errorTextGameObject.GetComponent<Text>();
 
-        ipText.text = "67.160.192.45";
+		ipText.text = "10.0.0.129";
         portText.text = "7777";
 	}
 	

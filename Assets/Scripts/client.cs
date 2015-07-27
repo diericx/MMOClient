@@ -378,8 +378,9 @@ public class Client : MonoBehaviour
             List<object> npcXs = (List<object>)msg["NpcXs"];
             List<object> npcYs = (List<object>)msg["NpcYs"];
             List<object> npcHlths = (List<object>)msg["NpcHlths"];
+			print (npcIDs.Count);
 
-            //update inventory
+			//update inventory
             inventoryController.updateInventory(inventoryTypes, inventoryIDs);
 
             //update hud scraps text
