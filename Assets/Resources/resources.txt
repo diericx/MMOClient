@@ -1,9 +1,10 @@
 {
-  "hull1":"Prefabs/Gear/Hull/hull1",
-  "hull2":"Prefabs/Gear/Hull/hull2",
-  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
-  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
+  "H1":"Prefabs/Gear/Hull/H1",
+  "H2":"Prefabs/Gear/Hull/H2",
+  "items":"items",
+  "lambert1":"Prefabs/Gear/Hull/Materials/lambert1",
+  "lambert1":"Prefabs/Gear/Hull/Materials/lambert1",
   "resources":"resources",
-  "wing1":"Prefabs/Gear/Wing/wing1",
-  "wing2":"Prefabs/Gear/Wing/wing2"
+  "W1":"Prefabs/Gear/Wing/W1",
+  "W2":"Prefabs/Gear/Wing/W2"
 }

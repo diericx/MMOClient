@@ -1,6 +1,14 @@
 {
-  "hull1":{
-    "asdf":2,
-    "attack":1
+  "H1":{
+    "healthCap":5
+  },
+  "H2":{
+    "healthCap":10
+  },
+  "W1":{
+    "speed":5
+  },
+  "W2":{
+    "speed":10
   }
 }

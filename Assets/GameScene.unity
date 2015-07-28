@@ -6696,7 +6696,7 @@ Canvas:
   serializedVersion: 2
   m_RenderMode: 1
   m_Camera: {fileID: 101583371}
-  m_PlaneDistance: 10.3500004
+  m_PlaneDistance: 10
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -6977,6 +6977,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clientScript: {fileID: 1053178315}
   slotPrefab: {fileID: 142972, guid: 068d67005635cb74e8f77f0016ee2e46, type: 2}
+  itemDataPanelPrefab: {fileID: 151458, guid: 4ecde877cd022a44a835d1008a519b3a, type: 2}
+  slotList: []
 --- !u!1 &2139179202
 GameObject:
   m_ObjectHideFlags: 0

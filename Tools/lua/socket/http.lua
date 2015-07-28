@@ -2,7 +2,7 @@
 -- HTTP/1.1 client support for the Lua language.
 -- LuaSocket toolkit.
 -- Author: Diego Nehab
--- RCS ID: $Id: http.lua,v 1.71 2007/10/13 23:55:20 diego Exp $
+-- RCS ID: $Id: http.lua,v 1.70 2007/03/12 04:08:40 diego Exp $
 -----------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------

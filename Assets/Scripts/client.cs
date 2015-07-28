@@ -277,8 +277,8 @@ public class Client : MonoBehaviour
             newPlayer.health = health;
             newPlayer.lastUpdate = Time.time;
             //set gear
-            newPlayer.setHull(1);
-            newPlayer.setWings(1, false);
+            newPlayer.setHull("H1");
+            newPlayer.setWings("W1", false);
             //add health bar
             Transform[] t = newPlayer.playerObject.GetComponentsInChildren<Transform>();
             newPlayer.healthBarObject = t[1].gameObject;
@@ -300,8 +300,9 @@ public class Client : MonoBehaviour
             foundPlayer.move(x, y);
             foundPlayer.rotate(rotation);
             foundPlayer.updateHealth(health);
-            foundPlayer.setWings( int.Parse(gear[2].ToString()), false );
-            foundPlayer.setHull( int.Parse(gear[0].ToString()) );
+            //print(gear[])
+            foundPlayer.setWings( (gear[2].ToString()), false );
+            foundPlayer.setHull( (gear[0].ToString()) );
         }
     }
 
@@ -355,8 +356,7 @@ public class Client : MonoBehaviour
             float speed = float.Parse(msg["Speed"].ToString());
             //Player inventory data
             List<object> gear = (List<object>)msg["Gear"];
-            List<object> inventoryTypes = (List<object>)msg["InventoryTypes"];
-            List<object> inventoryIDs = (List<object>)msg["InventoryIDs"];
+            List<object> inventory = (List<object>)msg["Inventory"];
 
             //get other player data arrays
             List<object> otherPlayerIDs = (List<object>)msg["OtherPlayerIDs"];
@@ -378,10 +378,9 @@ public class Client : MonoBehaviour
             List<object> npcXs = (List<object>)msg["NpcXs"];
             List<object> npcYs = (List<object>)msg["NpcYs"];
             List<object> npcHlths = (List<object>)msg["NpcHlths"];
-			print (npcIDs.Count);
 
 			//update inventory
-            inventoryController.updateInventory(inventoryTypes, inventoryIDs);
+            inventoryController.updateInventory(inventory);
 
             //update hud scraps text
             GUIController.updateScrapsTxt(scraps);
@@ -612,8 +611,8 @@ public class Player {
     public int rotation;
     public int scraps;
     public float lastUpdate;
-    private int wingID;
-    private int hullID;
+    private string currentWing;
+    private string currentHull;
     public GameObject playerObject;
     public GameObject healthBarObject;
     public GameObject hull;
@@ -638,11 +637,11 @@ public class Player {
         hull.transform.eulerAngles = new Vector3(0, 0, rotation);
     }
 
-    public void setHull(int id)
+    public void setHull(string item)
     {
-        if (hullID != id)
+        if (currentHull != item)
         {
-            hullID = id;
+            currentHull = item;
             //delete old hull if it is created
             if (hull != null)
             {
@@ -652,20 +651,19 @@ public class Player {
             //make sure playerObject is created
             if (playerObject != null)
             {
-                string hullObjID = "hull" + id.ToString();
-                hull = PrefabLoader.Instantiate(hullObjID, playerObject.transform.position, playerObject.transform.rotation);
+                hull = PrefabLoader.Instantiate(item, playerObject.transform.position, playerObject.transform.rotation);
                 hull.transform.parent = playerObject.transform;
-                setWings(wingID, true);
+                setWings(currentWing, true);
             }
         }
 
     }
 
-    public void setWings(int id, bool ignoreIDCheck)
+    public void setWings(string item, bool ignoreIDCheck)
     {
-        if ( (wingID != id || ignoreIDCheck == true) && id != 0 )
+        if ((currentWing != item || ignoreIDCheck == true) && item != "" && item != null)
         {
-            wingID = id;
+            currentWing = item;
             //delete old wings
             if (rightWing != null)
             {
@@ -676,7 +674,7 @@ public class Player {
                 UnityEngine.Object.Destroy(leftWing);
             }
 
-            string wingObjID = "wing" + id.ToString();
+            string wingObjID = item;
             //spawn left wing
             if (hull != null)
             {
