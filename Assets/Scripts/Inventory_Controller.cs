@@ -17,6 +17,7 @@ public class Inventory_Controller : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        ItemDataLoader.Init();
 
         slotList = new List<InventorySlot>();
 
@@ -126,7 +127,7 @@ public class InventorySlot : MonoBehaviour
         itemDataPanelObj.GetComponent<ItemDataPanel_Controller>().setItemName(itemId);
 
         //create item data string
-        Dictionary<string, int> itemData = getItemData(itemId);
+        Dictionary<string, int> itemData = ItemDataLoader.getItemData(itemId);
         foreach (KeyValuePair<string, int> data in itemData)
         {
             string key = data.Key.ToString();
@@ -192,29 +193,11 @@ public class InventorySlot : MonoBehaviour
 
     }
 
-    public Dictionary<string, int> getItemData(string itemID)
-    {
 
-        Dictionary<string, int> itemDataList = new Dictionary<string, int>();
+    //public int getItemAttribute(string itemID)
+    //{
 
-        Hashtable items = (Hashtable)JSON.JsonDecode((Resources.Load("items") as TextAsset).text);
-        foreach (DictionaryEntry item in items)
-        {
-            if (item.Key.Equals(itemID))
-            {
-                Hashtable itemData = (Hashtable)item.Value;
-                //  ^this is each item
-                //now have to loop through the item's table to get the stat changes
-                foreach (DictionaryEntry data in itemData)
-                {
-                    print("     " + (string)data.Key + ": " + data.Value);
-                    itemDataList.Add(data.Key.ToString(), int.Parse(data.Value.ToString()));
-                }
-            }
-        }
-
-        return itemDataList;
-    }
+    //}
 
     public GameObject getPanelObj()
     {

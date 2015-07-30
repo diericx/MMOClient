@@ -35,6 +35,9 @@ public class LoginGUI : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        bool gotit = Security.PrefetchSocketPolicy("23.229.106.205", 7778);
+        print(gotit);
+
         Cursor.SetCursor(cursor, hotSpot, cursorMode);
 
 		baseURL = "http://" + "192.168.0.112" + ":3000/api/v1/";

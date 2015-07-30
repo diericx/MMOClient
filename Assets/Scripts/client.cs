@@ -28,6 +28,7 @@ public class Client : MonoBehaviour
     public GameObject scrapsText;
 
     public static System.Random r;
+    public static List<object> playerGear;
     
     [HideInInspector]
     public int xMovement = 0;
@@ -356,6 +357,7 @@ public class Client : MonoBehaviour
             float speed = float.Parse(msg["Speed"].ToString());
             //Player inventory data
             List<object> gear = (List<object>)msg["Gear"];
+            playerGear = gear;
             List<object> inventory = (List<object>)msg["Inventory"];
 
             //get other player data arrays

@@ -47,9 +47,11 @@ public class GameUI_Controller : MonoBehaviour {
     public void updateCurrentHealth(float health, int healthCap)
     {
         ////update text
-        healthValueText.GetComponent<Text>().text = health+"%";
+        healthValueText.GetComponent<Text>().text = health + "/" + healthCap;
         ////update bars
-        float healthCapValue = (healthCap * 10f) + 100;
+        int hullHealthAttr = ItemDataLoader.getItemAttribute( Client.playerGear[0].ToString(), "healthCap" );
+        float healthCapValue = (healthCap * 10f) + 100 + hullHealthAttr;
+        print(hullHealthAttr);
         float percent = ((float)health / healthCapValue) * 100;
         int rounded = Convert.ToInt32(percent);
         currentHealthImg.GetComponent<Image>().fillAmount = (float)rounded / 100f;
