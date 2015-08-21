@@ -11,7 +11,7 @@ public class GameUI_Controller : MonoBehaviour {
     public GameObject healthValueText;
     public GameObject shieldHudObj;
     public GameObject shieldHudTxtObj;
-    public GameObject energyHudObj;
+    public GameObject XPHudObj;
 
     public GameObject healthCapStatTxt;
     public GameObject healthRegenStatTxt;
@@ -51,7 +51,6 @@ public class GameUI_Controller : MonoBehaviour {
         ////update bars
         int hullHealthAttr = ItemDataLoader.getItemAttribute( Client.playerGear[0].ToString(), "healthCap" );
         float healthCapValue = (healthCap * 10f) + 100 + hullHealthAttr;
-        print(hullHealthAttr);
         float percent = ((float)health / healthCapValue) * 100;
         int rounded = Convert.ToInt32(percent);
         currentHealthImg.GetComponent<Image>().fillAmount = (float)rounded / 100f;
@@ -82,15 +81,16 @@ public class GameUI_Controller : MonoBehaviour {
 
     }
 
-    public void updateEnergyHUD(float energy, int energyCap)
+    public void updateXPHUD(int xp, int level)
     {
-        //update text
-        //energyValueText.GetComponent<Text>().text = energy + "/" + energyCap;
+        
+        //calculate xp cap for this level
+        float currentXPCap = Client.BASE_XP * Mathf.Pow(level, Client.LEVEL_XP_FACTOR);
+        float currentXPCapRounded = (int)Mathf.Floor(currentXPCap);
+        float currentXPPercent = ((float)xp / currentXPCapRounded) * 100;
+        print("Level: " + level + ", XP: " + xp + ", CAP: " + currentXPCapRounded + ", %: " + currentXPPercent);
         //update bars
-        float energyCapValue = (energyCap * 10f) + 50f;
-        float percent = ((float)energy / energyCapValue) * 100;
-        int rounded = Convert.ToInt32(percent);
-        energyHudObj.GetComponent<ProgressBar.ProgressBarBehaviour>().Value = rounded;
+        XPHudObj.GetComponent<ProgressBar.ProgressBarBehaviour>().Value = currentXPPercent;
     }
 
     public void updateShieldHUD(float shield, int shieldCap)

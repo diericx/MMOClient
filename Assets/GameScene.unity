@@ -615,7 +615,7 @@ MonoBehaviour:
   healthValueText: {fileID: 1061905806}
   shieldHudObj: {fileID: 1989041857}
   shieldHudTxtObj: {fileID: 1989041858}
-  energyHudObj: {fileID: 769458044}
+  XPHudObj: {fileID: 189838352}
   healthCapStatTxt: {fileID: 1136143010}
   healthRegenStatTxt: {fileID: 970172242}
   shieldCapStatTxt: {fileID: 591849324}
@@ -993,6 +993,10 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 161238052}
+--- !u!1 &189838352 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 123010, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
+  m_PrefabInternal: {fileID: 207470074}
 --- !u!1001 &207470074
 Prefab:
   m_ObjectHideFlags: 0
@@ -1082,7 +1086,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11423012, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
       propertyPath: ProgressSpeed
-      value: 2000
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 11423012, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
       propertyPath: OnCompleteMethods.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument
@@ -1090,7 +1094,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 123010, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
       propertyPath: m_Name
-      value: EnergyHUDItem
+      value: XPHUDItem
+      objectReference: {fileID: 0}
+    - target: {fileID: 11423006, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
+      propertyPath: m_Text
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
@@ -2360,10 +2368,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 769221762}
---- !u!1 &769458044 stripped
-GameObject:
-  m_PrefabParentObject: {fileID: 123010, guid: 02e917cf5b02271479631cc13cb38c5f, type: 2}
-  m_PrefabInternal: {fileID: 207470074}
 --- !u!224 &769458045 stripped
 RectTransform:
   m_PrefabParentObject: {fileID: 22423010, guid: 02e917cf5b02271479631cc13cb38c5f,

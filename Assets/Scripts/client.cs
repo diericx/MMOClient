@@ -29,6 +29,9 @@ public class Client : MonoBehaviour
 
     public static System.Random r;
     public static List<object> playerGear;
+
+    public static int BASE_XP = 100;
+    public static int LEVEL_XP_FACTOR = 4;
     
     [HideInInspector]
     public int xMovement = 0;
@@ -344,6 +347,8 @@ public class Client : MonoBehaviour
             float y = float.Parse(msg["Y"].ToString());
             int rotation = int.Parse(msg["Rotation"].ToString());
             string id = (msg["ID"].ToString());
+            int level = int.Parse(msg["Level"].ToString());
+            int XP = int.Parse(msg["XP"].ToString());
             float health = float.Parse(msg["Health"].ToString());
             int healthCap = int.Parse(msg["HealthCap"].ToString());
             float energy = float.Parse(msg["Energy"].ToString());
@@ -393,8 +398,8 @@ public class Client : MonoBehaviour
             ////update hud health bar
             GUIController.updateCurrentHealth(health, healthCap);
 
-            ////update energy hud bar
-            GUIController.updateEnergyHUD(energy, energyCap);
+            ////update XP hud bar
+            GUIController.updateXPHUD(XP, level);
 
             ////update shield bars
             GUIController.updateShieldHUD(shield, shieldCap);
