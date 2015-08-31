@@ -24,7 +24,7 @@ public class Client : MonoBehaviour
     public Inventory_Controller inventoryController;
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
-    public GameObject npcPrefab;
+    public GameObject[] npcPrefabs;
     public GameObject scrapsText;
 
     public static System.Random r;
@@ -219,9 +219,10 @@ public class Client : MonoBehaviour
 		return bulletObj;
 	}
 
-    public GameObject instantiateNewNpcObject(float x, float y)
+    public GameObject instantiateNewNpcObject(int type, float x, float y)
     {
-        GameObject npcObject = (GameObject)Instantiate(npcPrefab, new Vector3(x, y, 0), Quaternion.identity);
+    	print (type);
+		GameObject npcObject = (GameObject)Instantiate(npcPrefabs[type-1], new Vector3(x, y, 0), Quaternion.identity);
         return npcObject;
     }
 
@@ -318,7 +319,7 @@ public class Client : MonoBehaviour
         if (foundNpc == null)
         {
             Npc newNpc = new Npc(id);
-            newNpc.npcObject = instantiateNewNpcObject(x, y);
+			newNpc.npcObject = instantiateNewNpcObject(type, x, y);
             newNpc.move(x, y);
             newNpc.npcObject.transform.eulerAngles = new Vector3(0, 0, 0);
             newNpc.x = x;
@@ -337,6 +338,7 @@ public class Client : MonoBehaviour
 
     void parsePacket(Dictionary<string, object> msg)
     {
+    	try {
         string action = msg["Action"].ToString();
 
         if (action == "playerUpdate")
@@ -348,6 +350,7 @@ public class Client : MonoBehaviour
             int rotation = int.Parse(msg["Rotation"].ToString());
             string id = (msg["ID"].ToString());
             int level = int.Parse(msg["Level"].ToString());
+//            int XP = 0;
             int XP = int.Parse(msg["XP"].ToString());
             float health = float.Parse(msg["Health"].ToString());
             int healthCap = int.Parse(msg["HealthCap"].ToString());
@@ -518,6 +521,11 @@ public class Client : MonoBehaviour
         {
             Debug.Log("Action: " + msg["Action"] + "; Data: " + msg["Data"]);
         }
+        }
+        catch(Exception e) {
+        	Debug.LogError(e);
+        	
+        }
     }
 
     void getData()
@@ -549,15 +557,15 @@ public class Client : MonoBehaviour
                     byte[] message = new byte[packetLength];
                     server.Receive(message, message.Length, 0);
 
-                    //string messageString = System.Text.Encoding.Default.GetString(message);
-                    //print("MESSAGE:" + messageString);
+                    string messageString = System.Text.Encoding.Default.GetString(message);
+					print("MESSAGE GET:" + messageString);
 
                     BoxingPacker packer = new BoxingPacker();
                     Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
 
-                    //---go through the packet and perform actions---
-                    parsePacket(msg);
-
+                    //---go through the packet and perform actions---            
+                   	parsePacket(msg);
+			
                     //reset packet length so that it knows to look for new headers
                     packetLength = -1;
                 }
@@ -598,8 +606,12 @@ public class Client : MonoBehaviour
             message.Add("X", xMovement);
             message.Add("Y", yMovement);
             message.Add("Rotation", angleInDegrees);
+        
 
             var encodedMessage = packer.Pack(message);
+            
+			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
+			print("MESSAGE SEND:" + messageString);
 
             server.Send(encodedMessage);
 

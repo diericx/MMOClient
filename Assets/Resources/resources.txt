@@ -2,8 +2,8 @@
   "H1":"Prefabs/Gear/Hull/H1",
   "H2":"Prefabs/Gear/Hull/H2",
   "items":"items",
-  "lambert1":"Prefabs/Gear/Hull/Materials/lambert1",
-  "lambert1":"Prefabs/Gear/Hull/Materials/lambert1",
+  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
+  "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
   "resources":"resources",
   "W1":"Prefabs/Gear/Wing/W1",
   "W2":"Prefabs/Gear/Wing/W2"

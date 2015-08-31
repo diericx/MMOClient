@@ -2989,7 +2989,9 @@ MonoBehaviour:
   inventoryController: {fileID: 2108079144}
   playerPrefab: {fileID: 134384, guid: 4d80f5986c2ccd44699b098d68410715, type: 2}
   bulletPrefab: {fileID: 157210, guid: 90b9deefe5baf463e861236780550ad2, type: 2}
-  npcPrefab: {fileID: 110566, guid: db19705f325e46c4a83bce24770c3c05, type: 2}
+  npcPrefabs:
+  - {fileID: 110566, guid: db19705f325e46c4a83bce24770c3c05, type: 2}
+  - {fileID: 167512, guid: 9625697cb3dca44a0bd4ec6400676d13, type: 2}
   scrapsText: {fileID: 508971044}
   xMovement: 0
   yMovement: 0
