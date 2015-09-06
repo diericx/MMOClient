@@ -15,7 +15,7 @@ public class Client : MonoBehaviour
     ArrayList npcList = new ArrayList();
 	ArrayList bulletList = new ArrayList();
 
-    Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Udp);
 
     private const float SERVER_SEND_RATE = 0.15f;
     private const float SERVER_GET_RATE = 0.10f;
@@ -24,7 +24,6 @@ public class Client : MonoBehaviour
     public Inventory_Controller inventoryController;
     public GameObject playerPrefab;
     public GameObject bulletPrefab;
-    public GameObject[] npcPrefabs;
     public GameObject scrapsText;
 
     public static System.Random r;
@@ -221,8 +220,8 @@ public class Client : MonoBehaviour
 
     public GameObject instantiateNewNpcObject(int type, float x, float y)
     {
-    	print (type);
-		GameObject npcObject = (GameObject)Instantiate(npcPrefabs[type-1], new Vector3(x, y, 0), Quaternion.identity);
+		GameObject npcObject = PrefabLoader.Instantiate("npc"+type, new Vector3(x, y, 0), Quaternion.identity);
+
         return npcObject;
     }
 
@@ -558,7 +557,6 @@ public class Client : MonoBehaviour
                     server.Receive(message, message.Length, 0);
 
                     string messageString = System.Text.Encoding.Default.GetString(message);
-					print("MESSAGE GET:" + messageString);
 
                     BoxingPacker packer = new BoxingPacker();
                     Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
@@ -611,7 +609,7 @@ public class Client : MonoBehaviour
             var encodedMessage = packer.Pack(message);
             
 			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
-			print("MESSAGE SEND:" + messageString);
+			//print("MESSAGE SEND:" + messageString);
 
             server.Send(encodedMessage);
 

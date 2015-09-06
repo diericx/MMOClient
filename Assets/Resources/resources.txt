@@ -4,6 +4,8 @@
   "items":"items",
   "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
   "lambert1":"Prefabs/Gear/Wing/Materials/lambert1",
+  "npc1":"Prefabs/NPCs/npc1",
+  "npc2":"Prefabs/NPCs/npc2",
   "resources":"resources",
   "W1":"Prefabs/Gear/Wing/W1",
   "W2":"Prefabs/Gear/Wing/W2"

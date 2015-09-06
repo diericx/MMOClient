@@ -88,7 +88,7 @@ public class GameUI_Controller : MonoBehaviour {
         float currentXPCap = Client.BASE_XP * Mathf.Pow(level, Client.LEVEL_XP_FACTOR);
         float currentXPCapRounded = (int)Mathf.Floor(currentXPCap);
         float currentXPPercent = ((float)xp / currentXPCapRounded) * 100;
-        print("Level: " + level + ", XP: " + xp + ", CAP: " + currentXPCapRounded + ", %: " + currentXPPercent);
+        //print("Level: " + level + ", XP: " + xp + ", CAP: " + currentXPCapRounded + ", %: " + currentXPPercent);
         //update bars
         XPHudObj.GetComponent<ProgressBar.ProgressBarBehaviour>().Value = currentXPPercent;
     }

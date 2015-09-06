@@ -35,7 +35,7 @@ public class LoginGUI : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        bool gotit = Security.PrefetchSocketPolicy("23.229.106.205", 7778);
+		bool gotit = Security.PrefetchSocketPolicy("192.168.1.118", 7778);
         print(gotit);
 
         Cursor.SetCursor(cursor, hotSpot, cursorMode);
