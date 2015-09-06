@@ -15,7 +15,9 @@ public class Client : MonoBehaviour
     ArrayList npcList = new ArrayList();
 	ArrayList bulletList = new ArrayList();
 
-    Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Udp);
+    Socket server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+	IPAddress send_to_address = IPAddress.Parse("192.168.1.118");
+	IPEndPoint sending_end_point;
 
     private const float SERVER_SEND_RATE = 0.15f;
     private const float SERVER_GET_RATE = 0.10f;
@@ -46,27 +48,29 @@ public class Client : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+		sending_end_point = new IPEndPoint(send_to_address, 7777);
         server.SendTimeout = 1000;
         server.ReceiveTimeout = 1000;
-        IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(LoginGUI.ip), 7777);
+       
+        //IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(LoginGUI.ip), 7777);
 
-        try
-        {
-            server.Connect(ipep);
-        }
-        catch (SocketException e)
-        {
-            Debug.Log("Unable to connect to server!");
-            Debug.Log(e.ToString());
-            return;
-        }
+//        try
+//        {
+//            server.Connect(ipep);
+//        }
+//        catch (SocketException e)
+//        {
+//            Debug.Log("Unable to connect to server!");
+//            Debug.Log(e.ToString());
+//            return;
+//        }
 
         StartCoroutine(sendData());
 
-        r = new System.Random();
-
-        PrefabLoader.Init();
-        PrefabLoader.LoadAllPrefabs();
+//        r = new System.Random();
+//
+//        PrefabLoader.Init();
+//        PrefabLoader.LoadAllPrefabs();
         //PrefabLoader.Instantiate("bullet_prefab", new Vector3(0, 0, 0), Quaternion.identity);
     }
 
@@ -540,25 +544,30 @@ public class Client : MonoBehaviour
                 server.Receive(header, header.Length, 0);
                 //turn bytes into string
                 string headerString = System.Text.Encoding.Default.GetString(header);
+                print(headerString);
                 //get value of header string
                 int headerVal = int.Parse(headerString, System.Globalization.NumberStyles.HexNumber);
-
-                packetLength = headerVal;
+				//print("Header Val: " + headerVal);
+				
+				packetLength = headerVal;
             }
             else //if we already have a packet header length
             {
+            	//print ("GETTING DATA");
                 int available = server.Available;
                 //wait until the server loads that length
                 if (available >= packetLength)
                 {
-                    //print("Packet Length: " + packetLength);
+                    //print("LOADING PACKET Length: " + packetLength);
                     //load the packet
                     byte[] message = new byte[packetLength];
                     server.Receive(message, message.Length, 0);
 
                     string messageString = System.Text.Encoding.Default.GetString(message);
+                    
+					print ("Message string: " + messageString);
 
-                    BoxingPacker packer = new BoxingPacker();
+					       BoxingPacker packer = new BoxingPacker();
                     Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
 
                     //---go through the packet and perform actions---            
@@ -575,6 +584,7 @@ public class Client : MonoBehaviour
 	
 	IEnumerator sendData()
 	{
+		print("MESSAGE SEND:");
 		while (isAlive)
 		{
             //Debug.Log("SENDING");
@@ -609,13 +619,17 @@ public class Client : MonoBehaviour
             var encodedMessage = packer.Pack(message);
             
 			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
-			//print("MESSAGE SEND:" + messageString);
+			print("MESSAGE SEND:" + messageString);
 
-            server.Send(encodedMessage);
+            server.SendTo(encodedMessage, sending_end_point);
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }
     }
+    
+	void OnApplicationQuit() {
+		isAlive = false;
+	}
 }
 
 
