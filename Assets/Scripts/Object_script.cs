@@ -17,13 +17,15 @@ public class Object_script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        rotateSpeed = Random.Range(0.09f, 0.49f);
-
-        int rotX = Client.r.Next(0, 26);
-        int rotY = Client.r.Next(0, 26);
-        int rotZ = Client.r.Next(0, 26);
-
-        rot = new Vector3(rotX, rotY, rotZ);
+		if (shouldRotate) {
+	        rotateSpeed = Random.Range(0.09f, 0.49f);
+	
+	        int rotX = 26; //Client.r.Next(0, 26);
+	        int rotY = 0; //Client.r.Next(0, 26);
+	        int rotZ =  15; //Client.r.Next(0, 26);
+	
+	        rot = new Vector3(rotX, rotY, rotZ);
+	    }
 	}
 	
 	// Update is called once per frame

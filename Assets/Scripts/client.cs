@@ -547,24 +547,26 @@ public class Client : MonoBehaviour
     {
 		
     	while(isAlive) {
+    		while (udpClient.Available > 0) {
+				//IPEndPoint object will allow us to read datagrams sent from any source.
+				IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 7777);
+				
+				// Blocks until a message returns on this socket from a remote host.
+				Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint); 
+				
+				//			IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+	//			Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+				string message = System.Text.Encoding.Default.GetString(receiveBytes);
+				
+				BoxingPacker packer = new BoxingPacker();
+				Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(receiveBytes);
+				
+				parsePacket(msg);
 			
-			//IPEndPoint object will allow us to read datagrams sent from any source.
-			IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 7777);
-			
-			// Blocks until a message returns on this socket from a remote host.
-			Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint); 
-			
-			//			IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
-//			Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-			string message = System.Text.Encoding.Default.GetString(receiveBytes);
-			
-			BoxingPacker packer = new BoxingPacker();
-			Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(receiveBytes);
-			
-			parsePacket(msg);
-		
-//			print ("end getting data");
-			yield return new WaitForSeconds(0.1f);
+	//			print ("end getting data");
+				
+			}
+			yield return null;
 		}
 //		
 //		while (server.Available > 0)
