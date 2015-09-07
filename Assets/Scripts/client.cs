@@ -19,6 +19,8 @@ public class Client : MonoBehaviour
 	IPAddress send_to_address = IPAddress.Parse("192.168.1.118");
 	IPEndPoint sending_end_point;
 
+//	UdpClient udpClient;
+
     private const float SERVER_SEND_RATE = 0.15f;
     private const float SERVER_GET_RATE = 0.10f;
 
@@ -48,6 +50,9 @@ public class Client : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+//		udpClient = new UdpClient(6777);
+//		udpClient.Connect("192.168.1.118", 7777);
+
 		sending_end_point = new IPEndPoint(send_to_address, 7777);
         server.SendTimeout = 1000;
         server.ReceiveTimeout = 1000;
@@ -66,6 +71,7 @@ public class Client : MonoBehaviour
 //        }
 
         StartCoroutine(sendData());
+        StartCoroutine(getData());
 
 //        r = new System.Random();
 //
@@ -79,7 +85,7 @@ public class Client : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        getData();
+        //getData();
         checkObjectsForExpiration();
     }
 
@@ -97,7 +103,7 @@ public class Client : MonoBehaviour
 		
 		var encodedMessage = packer.Pack(message);
 
-        server.Send(encodedMessage);
+		server.SendTo(encodedMessage, sending_end_point);
 
 	}
 
@@ -109,7 +115,7 @@ public class Client : MonoBehaviour
 
         var encodedMessage = packer.Pack(message);
 
-        server.Send(encodedMessage);
+		server.SendTo(encodedMessage, sending_end_point);
     }
 
     public void sendEquipRequest(int index)
@@ -122,7 +128,7 @@ public class Client : MonoBehaviour
 
         var encodedMessage = packer.Pack(message);
 
-        server.Send(encodedMessage);
+		server.SendTo(encodedMessage, sending_end_point);
     }
 
     public void sendDropRequest(int index)
@@ -134,7 +140,7 @@ public class Client : MonoBehaviour
 
         var encodedMessage = packer.Pack(message);
 
-        server.Send(encodedMessage);
+		server.SendTo(encodedMessage, sending_end_point);
     }
 
     public void sendJumpRequest(float x, float y)
@@ -147,7 +153,7 @@ public class Client : MonoBehaviour
 
         var encodedMessage = packer.Pack(message);
 
-        server.Send(encodedMessage);
+		server.SendTo(encodedMessage, sending_end_point);
     }
 
     //check if this is the main player
@@ -531,55 +537,68 @@ public class Client : MonoBehaviour
         }
     }
 
-    void getData()
+	IEnumerator getData()
     {
-        while (server.Available > 0)
+    	print ("GET DATA FUNCTION");
+		
+//    	while(isAlive) {
+//			print ("Geting data");
+//			print(udpClient.Available);
+//			IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+//			Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+//			string returnData = System.Text.Encoding.Default.GetString(receiveBytes);
+//			print ("Recieve data:" + returnData);
+////			print ("end getting data");
+//			yield return new WaitForSeconds(0.1f);
+//		}
+		
+		while (server.Available > 0)
         {
-
-            //if we havent gotten a packet header length yet
+//
+//            //if we havent gotten a packet header length yet
             if (packetLength == -1)
             {
-                //get the packet header
-                byte[] header = new byte[5];
+//                //get the packet header
+                byte[] header = new byte[100];
                 server.Receive(header, header.Length, 0);
-                //turn bytes into string
+//                //turn bytes into string
                 string headerString = System.Text.Encoding.Default.GetString(header);
-                print(headerString);
-                //get value of header string
+//                print(headerString);
+//                //get value of header string
                 int headerVal = int.Parse(headerString, System.Globalization.NumberStyles.HexNumber);
-				//print("Header Val: " + headerVal);
-				
+				print("Header Val: " + headerVal);
+//				
 				packetLength = headerVal;
             }
             else //if we already have a packet header length
             {
-            	//print ("GETTING DATA");
+            	
                 int available = server.Available;
-                //wait until the server loads that length
+				print (available + ", " + packetLength);
+				//                //wait until the server loads that length
                 if (available >= packetLength)
                 {
-                    //print("LOADING PACKET Length: " + packetLength);
-                    //load the packet
-                    byte[] message = new byte[packetLength];
-                    server.Receive(message, message.Length, 0);
-
-                    string messageString = System.Text.Encoding.Default.GetString(message);
-                    
-					print ("Message string: " + messageString);
-
-					       BoxingPacker packer = new BoxingPacker();
-                    Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
-
-                    //---go through the packet and perform actions---            
-                   	parsePacket(msg);
-			
-                    //reset packet length so that it knows to look for new headers
+//                    //print("LOADING PACKET Length: " + packetLength);
+//                    //load the packet
+//                    byte[] message = new byte[packetLength];
+//                    server.Receive(message, message.Length, 0);
+//
+//                    string messageString = System.Text.Encoding.Default.GetString(message);
+//                    
+//					print ("Message string: " + messageString);
+//
+//					       BoxingPacker packer = new BoxingPacker();
+//                    Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(message);
+//
+//                    //---go through the packet and perform actions---            
+//                   	parsePacket(msg);
+//			
+//                    //reset packet length so that it knows to look for new headers
                     packetLength = -1;
                 }
-
-            }
+			}
+			yield return null;
         }
-
 	}
 	
 	IEnumerator sendData()
@@ -621,7 +640,7 @@ public class Client : MonoBehaviour
 			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
 			print("MESSAGE SEND:" + messageString);
 
-            server.SendTo(encodedMessage, sending_end_point);
+			server.SendTo(encodedMessage, sending_end_point);
 
             yield return new WaitForSeconds(SERVER_SEND_RATE);
         }
