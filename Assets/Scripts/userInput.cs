@@ -29,7 +29,7 @@ public class userInput : MonoBehaviour {
             float deltaY = mouseposition.y - p.playerObject.transform.position.y;
             float angle = (Mathf.Atan2(deltaY, deltaX) * 180 / Mathf.PI) - 90;
             angleInDegrees = Convert.ToInt32(angle);
-            p.rotate(angleInDegrees);
+            //p.rotate(angleInDegrees);
         }
 
         if (Input.GetKey("w"))

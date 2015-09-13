@@ -42,8 +42,9 @@ public class Client : MonoBehaviour
     public int yMovement = 0;
 
     private long packetLength = -1;
-
-    bool isAlive = true;
+	private BoxingPacker packer = new BoxingPacker();
+	
+	bool isAlive = true;
 
     private Thread _t1;
 
@@ -51,7 +52,7 @@ public class Client : MonoBehaviour
     void Start()
     {
 		udpClient = new UdpClient(6777);
-		udpClient.Connect("192.168.1.118", 7777);
+		udpClient.Connect("10.0.0.160", 7777);
 
 //		sending_end_point = new IPEndPoint(send_to_address, 7777);
 //        server.SendTimeout = 1000;
@@ -92,7 +93,7 @@ public class Client : MonoBehaviour
     
     public void sendShot(float x, float y, int rotation) {
 		Debug.Log("SHOT");
-		BoxingPacker packer = new BoxingPacker();
+		//BoxingPacker packer = new BoxingPacker();
 		
 		Dictionary<string, object> message = new Dictionary<string, object>();
 		message.Add("Action", "shoot");
@@ -111,7 +112,7 @@ public class Client : MonoBehaviour
 
     public void sendUpgradeRequest(string upgrade)
     {
-        BoxingPacker packer = new BoxingPacker();
+        //BoxingPacker packer = new BoxingPacker();
         Dictionary<string, object> message = new Dictionary<string, object>();
         message.Add("Action", "upgrade"+upgrade);
 
@@ -124,7 +125,7 @@ public class Client : MonoBehaviour
     public void sendEquipRequest(int index)
     {
         print("SEND EQUIP REQ");
-        BoxingPacker packer = new BoxingPacker();
+        //BoxingPacker packer = new BoxingPacker();
         Dictionary<string, object> message = new Dictionary<string, object>();
         message.Add("Action", "equip");
         message.Add("Value", index);
@@ -137,7 +138,7 @@ public class Client : MonoBehaviour
 
     public void sendDropRequest(int index)
     {
-        BoxingPacker packer = new BoxingPacker();
+        //BoxingPacker packer = new BoxingPacker();
         Dictionary<string, object> message = new Dictionary<string, object>();
         message.Add("Action", "drop");
         message.Add("Value", index);
@@ -150,7 +151,7 @@ public class Client : MonoBehaviour
 
     public void sendJumpRequest(float x, float y)
     {
-        BoxingPacker packer = new BoxingPacker();
+        //BoxingPacker packer = new BoxingPacker();
         Dictionary<string, object> message = new Dictionary<string, object>();
         message.Add("Action", "jump");
         message.Add("X", x);
@@ -556,9 +557,9 @@ public class Client : MonoBehaviour
 				
 				//			IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
 	//			Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-				string message = System.Text.Encoding.Default.GetString(receiveBytes);
+				//string message = System.Text.Encoding.Default.GetString(receiveBytes);
 				
-				BoxingPacker packer = new BoxingPacker();
+				
 				Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(receiveBytes);
 				
 				parsePacket(msg);
@@ -624,7 +625,7 @@ public class Client : MonoBehaviour
 		while (isAlive)
 		{
             //Debug.Log("SENDING");
-            BoxingPacker packer = new BoxingPacker();
+            //BoxingPacker packer = new BoxingPacker();
             int angleInDegrees = 0;
 
             //get mouse world positon
