@@ -52,7 +52,7 @@ public class Client : MonoBehaviour
     void Start()
     {
 		udpClient = new UdpClient(6777);
-		udpClient.Connect("10.0.0.160", 7777);
+        udpClient.Connect("192.168.2.36", 7777);
 
 //		sending_end_point = new IPEndPoint(send_to_address, 7777);
 //        server.SendTimeout = 1000;

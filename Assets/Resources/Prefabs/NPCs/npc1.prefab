@@ -12,7 +12,7 @@ GameObject:
   - 23: {fileID: 2314978}
   - 114: {fileID: 11474940}
   m_Layer: 0
-  m_Name: prop_asteroid_01
+  m_Name: npc1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

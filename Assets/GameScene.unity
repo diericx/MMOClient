@@ -2989,9 +2989,6 @@ MonoBehaviour:
   inventoryController: {fileID: 2108079144}
   playerPrefab: {fileID: 134384, guid: 4d80f5986c2ccd44699b098d68410715, type: 2}
   bulletPrefab: {fileID: 157210, guid: 90b9deefe5baf463e861236780550ad2, type: 2}
-  npcPrefabs:
-  - {fileID: 110566, guid: db19705f325e46c4a83bce24770c3c05, type: 2}
-  - {fileID: 167512, guid: 9625697cb3dca44a0bd4ec6400676d13, type: 2}
   scrapsText: {fileID: 508971044}
   xMovement: 0
   yMovement: 0
@@ -3919,6 +3916,7 @@ GameObject:
   - 4: {fileID: 1237920855}
   - 198: {fileID: 1237920854}
   - 199: {fileID: 1237920853}
+  - 114: {fileID: 1237920856}
   m_Layer: 0
   m_Name: Particle System
   m_TagString: Untagged
@@ -4214,9 +4212,9 @@ ParticleSystem:
     radius: 1
     angle: 25
     length: 5
-    boxX: 300
-    boxY: 119
-    boxZ: 300
+    boxX: 200
+    boxY: 100
+    boxZ: 200
     arc: 360
     placementMode: 0
     m_Mesh: {fileID: 0}
@@ -5027,6 +5025,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
+--- !u!114 &1237920856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1237920852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4355a800890c3d741883b35b0018f3f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1256543782
 GameObject:
   m_ObjectHideFlags: 0

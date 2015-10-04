@@ -13,7 +13,7 @@ GameObject:
   - 23: {fileID: 2357008}
   - 114: {fileID: 11483682}
   m_Layer: 0
-  m_Name: Krab
+  m_Name: krab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
