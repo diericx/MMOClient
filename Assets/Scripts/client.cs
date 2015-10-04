@@ -52,7 +52,7 @@ public class Client : MonoBehaviour
     void Start()
     {
 		udpClient = new UdpClient(6777);
-        udpClient.Connect("192.168.2.36", 7777);
+		udpClient.Connect("10.0.0.187", 7777);
 
 //		sending_end_point = new IPEndPoint(send_to_address, 7777);
 //        server.SendTimeout = 1000;
@@ -562,6 +562,8 @@ public class Client : MonoBehaviour
 				
 				Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(receiveBytes);
 				
+				print ("parse");
+				
 				parsePacket(msg);
 			
 	//			print ("end getting data");
@@ -656,6 +658,8 @@ public class Client : MonoBehaviour
             var encodedMessage = packer.Pack(message);
             
 			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
+			
+			print (messageString);
 			
 //			server.SendTo(encodedMessage, sending_end_point);
 			udpClient.Send(encodedMessage, encodedMessage.Length);
