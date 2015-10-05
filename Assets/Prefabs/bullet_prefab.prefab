@@ -55,8 +55,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 157210}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -23.3667374, y: 183.196457, z: 172.748856}
-  m_LocalScale: {x: .200000003, y: .600000024, z: .200000003}
+  m_LocalPosition: {x: -1.69451094, y: 13.8100004, z: 4.34079456}
+  m_LocalScale: {x: .34155792, y: .380865037, z: .314692944}
   m_Children:
   - {fileID: 448162}
   m_Father: {fileID: 0}
@@ -117,21 +117,21 @@ TrailRenderer:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_Time: .5
-  m_StartWidth: .200000003
-  m_EndWidth: 0
+  m_StartWidth: .400000006
+  m_EndWidth: .300000012
   m_Colors:
     m_Color[0]:
       serializedVersion: 2
-      rgba: 4294967295
+      rgba: 2650800127
     m_Color[1]:
       serializedVersion: 2
-      rgba: 4294967295
+      rgba: 2969567231
     m_Color[2]:
       serializedVersion: 2
-      rgba: 4294967295
+      rgba: 2432696319
     m_Color[3]:
       serializedVersion: 2
-      rgba: 4294967295
+      rgba: 1845493759
     m_Color[4]:
       serializedVersion: 2
       rgba: 16777215
@@ -180,6 +180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b4c12172d3a7664b82a1dac6029dd2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  shouldRotate: 0
 --- !u!136 &13657210
 CapsuleCollider:
   m_ObjectHideFlags: 1

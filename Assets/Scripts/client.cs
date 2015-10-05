@@ -33,8 +33,8 @@ public class Client : MonoBehaviour
     public static System.Random r;
     public static List<object> playerGear;
 
-    public static int BASE_XP = 100;
-    public static int LEVEL_XP_FACTOR = 4;
+    public static int BASE_XP = 50;
+    public static int LEVEL_XP_FACTOR = 1;
     
     [HideInInspector]
     public int xMovement = 0;
@@ -52,7 +52,7 @@ public class Client : MonoBehaviour
     void Start()
     {
 		udpClient = new UdpClient(6777);
-		udpClient.Connect("10.0.0.187", 7777);
+		udpClient.Connect("127.0.0.1", 7777);
 
 //		sending_end_point = new IPEndPoint(send_to_address, 7777);
 //        server.SendTimeout = 1000;
@@ -237,7 +237,7 @@ public class Client : MonoBehaviour
 
     public GameObject instantiateNewNpcObject(int type, float x, float y)
     {
-		GameObject npcObject = PrefabLoader.Instantiate("npc"+1, new Vector3(x, y, 0), Quaternion.identity);
+		GameObject npcObject = PrefabLoader.Instantiate("npc"+type, new Vector3(x, y, 0), Quaternion.identity);
 
         return npcObject;
     }
@@ -368,6 +368,8 @@ public class Client : MonoBehaviour
             int level = int.Parse(msg["Level"].ToString());
 //            int XP = 0;
             int XP = int.Parse(msg["XP"].ToString());
+			int skillPoints = int.Parse(msg["SkillPoints"].ToString());
+			print (skillPoints);
             float health = float.Parse(msg["Health"].ToString());
             int healthCap = int.Parse(msg["HealthCap"].ToString());
             float energy = float.Parse(msg["Energy"].ToString());
@@ -562,8 +564,6 @@ public class Client : MonoBehaviour
 				
 				Dictionary<string, object> msg = (Dictionary<string, object>)packer.Unpack(receiveBytes);
 				
-				print ("parse");
-				
 				parsePacket(msg);
 			
 	//			print ("end getting data");
@@ -658,8 +658,7 @@ public class Client : MonoBehaviour
             var encodedMessage = packer.Pack(message);
             
 			string messageString = System.Text.Encoding.Default.GetString(encodedMessage);
-			
-			print (messageString);
+		
 			
 //			server.SendTo(encodedMessage, sending_end_point);
 			udpClient.Send(encodedMessage, encodedMessage.Length);
