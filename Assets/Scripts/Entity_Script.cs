@@ -5,6 +5,7 @@ using UnityEngine;
 public class Entity_Script : MonoBehaviour {
 
 	public int id = -1;
+	public bool isClient = false;
 
 	// Use this for initialization
 	void Start () {
@@ -14,8 +15,14 @@ public class Entity_Script : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (id != -1) {
-			Entity e = Net_tcp.getEntity(id);
+			Entity e = Net_tcp.getEntity(id, isClient);
 			transform.position = e.pos;
+			Transform fpsChar = transform.GetChild(0);
+			Vector3 newRot = new Vector3(fpsChar.rotation.x, transform.rotation.y, 0);
+			if (newRot != e.rot) {
+				e.rot = newRot;
+				e.rotChanged = true;
+			}
 		}
 	}
 }
