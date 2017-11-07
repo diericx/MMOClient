@@ -17,12 +17,16 @@ public class Entity_Script : MonoBehaviour {
 		if (id != -1) {
 			Entity e = Net_tcp.getEntity(id, isClient);
 			transform.position = e.pos;
+
+			// deal with rotation
 			Transform fpsChar = transform.GetChild(0);
 			Vector3 newRot = new Vector3(fpsChar.rotation.x, transform.rotation.y, 0);
 			if (newRot != e.rot) {
 				e.rot = newRot;
 				e.rotChanged = true;
 			}
+			Net_tcp.updateEntity(id, e);
+			
 		}
 	}
 }

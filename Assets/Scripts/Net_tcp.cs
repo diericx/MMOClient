@@ -11,6 +11,8 @@ using System.Linq;
 
 public class Net_tcp : MonoBehaviour {
 
+    const float SEND_REFRESH_RATE = 0.033f;
+
     public String host = "127.0.0.1";
     public Int32 port = 6666;
     public GameObject entityPrefab;
@@ -83,6 +85,12 @@ public class Net_tcp : MonoBehaviour {
             return entities[id];
         } else {
             return createEntity(id, isClient);
+        }
+    }
+
+    public static void updateEntity(int id, Entity e) {
+        if (entities.ContainsKey(id)) {
+            Net_tcp.entities[id] = e;
         }
     }
 
@@ -160,7 +168,6 @@ public class Net_tcp : MonoBehaviour {
                     // ReceivePacket rp = readObject(net_stream);
                     ReceivePacket rp = MessagePackSerializer.Deserialize<ReceivePacket>(net_stream, true);
                     // ReceivePacket rp = MsgPack.Deserialize<ReceivePacket>(net_stream);
-
                     if (rp.type == "player") {
                         
                         Entity e = getEntity(rp.id, rp.is_client);
@@ -179,21 +186,23 @@ public class Net_tcp : MonoBehaviour {
     }
 
     IEnumerator sendData() {
-        Entity ce = getClientEntity();
-        // if the client entity has actually been created
-        if (ce != null) {
-            // if the rotation has changed, send it!
-            if (ce.rotChanged) {
-                RotationPacket rp = new RotationPacket() {
-                    x = (int)ce.rot.x,
-                    y = (int)ce.rot.y,
-                    z = (int)ce.rot.z
-                };
-                var bytes = MessagePackSerializer.Serialize(rp);
-                writeSocket(bytes);
+        while (alive) {
+            Entity ce = getClientEntity();
+            // if the client entity has actually been created
+            if (ce != null) {
+                // if the rotation has changed, send it!
+                if (ce.rotChanged) {
+                    RotationPacket rp = new RotationPacket() {
+                        x = (double)ce.rot.x,
+                        y = (double)ce.rot.y,
+                        z = (double)ce.rot.z
+                    };
+                    var bytes = MessagePackSerializer.Serialize(rp);
+                    writeSocket(bytes);
+                }
             }
+            yield return new WaitForSeconds(SEND_REFRESH_RATE);
         }
-        yield return new WaitForSeconds(0.33f);
     }
 
 	public void writeSocket(byte[] line)
@@ -217,6 +226,11 @@ public class Net_tcp : MonoBehaviour {
         socket_ready = false;
     }
 
+    public void cleanThreads() {
+        receiveDataThread.Abort();
+        alive = false;
+    }
+
 	public void setupSocket()
     {
         try
@@ -228,6 +242,8 @@ public class Net_tcp : MonoBehaviour {
             // Start receiving data
             receiveDataThread = new Thread(receiveData);
             receiveDataThread.Start();
+            // Start sending data
+            StartCoroutine("sendData");
 
             socket_ready = true;
         }
@@ -241,7 +257,7 @@ public class Net_tcp : MonoBehaviour {
 	void OnApplicationQuit()
     {
         closeSocket();
-        receiveDataThread.Abort();
+        cleanThreads();
     }
 }
 
@@ -266,11 +282,11 @@ public class RotationPacket
     [Key("type")]
     public string type = "rot";
     [Key("x")]
-    public int x { get; set; }
+    public double x { get; set; }
     [Key("y")]
-    public int y { get; set; }
+    public double y { get; set; }
     [Key("z")]
-    public int z { get; set; }
+    public double z { get; set; }
 }
 
 [MessagePackObject]
