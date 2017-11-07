@@ -193,9 +193,9 @@ public class Net_tcp : MonoBehaviour {
                 // if the rotation has changed, send it!
                 if (ce.rotChanged) {
                     RotationPacket rp = new RotationPacket() {
-                        x = (double)ce.rot.x,
-                        y = (double)ce.rot.y,
-                        z = (double)ce.rot.z
+                        x = (int)ce.rot.x,
+                        y = (int)ce.rot.y,
+                        z = (int)ce.rot.z
                     };
                     var bytes = MessagePackSerializer.Serialize(rp);
                     writeSocket(bytes);
@@ -282,11 +282,11 @@ public class RotationPacket
     [Key("type")]
     public string type = "rot";
     [Key("x")]
-    public double x { get; set; }
+    public int x { get; set; }
     [Key("y")]
-    public double y { get; set; }
+    public int y { get; set; }
     [Key("z")]
-    public double z { get; set; }
+    public int z { get; set; }
 }
 
 [MessagePackObject]

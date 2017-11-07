@@ -20,7 +20,7 @@ public class Entity_Script : MonoBehaviour {
 
 			// deal with rotation
 			Transform fpsChar = transform.GetChild(0);
-			Vector3 newRot = new Vector3(fpsChar.rotation.x, transform.rotation.y, 0);
+			Vector3 newRot = new Vector3(fpsChar.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0);
 			if (newRot != e.rot) {
 				e.rot = newRot;
 				e.rotChanged = true;
