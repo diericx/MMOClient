@@ -21,9 +21,9 @@ public class Net_tcp : MonoBehaviour {
     private int buffer_size = 2000;
     // Threading Vars
     private Thread receiveDataThread;
-    private Queue<Entity> entityUpdateQueue = new Queue<Entity>();
-    private int _entityUpdateQueueMax = 200;
-    private object _entityUpdateQueueLock = new object();
+    private Queue<EntityAction> entityActionQueue = new Queue<EntityAction>();
+    private int _entityActionQueueMax = 200;
+    private object _entityActionQueueLock = new object();
 
     // Networking Vars 
 	TcpClient tcp_socket;
@@ -31,8 +31,13 @@ public class Net_tcp : MonoBehaviour {
 
     public static Dictionary<int, Entity> entities = new Dictionary<int, Entity>();
 
+    // Private variables
 	private bool alive = true;
     private int clientID = -1;
+
+    // list for inputs to check if any have changed
+    private string[] keys = {"w", "a", "s", "d"};
+    private int[] mouseButtons = {0};
 
 	// Use this for initialization
 	void Start () {
@@ -52,7 +57,6 @@ public class Net_tcp : MonoBehaviour {
         manageEntityUpdateQueue();
 
         // Sends user inputs to the server as they happen
-        string[] keys = {"w", "a", "s", "d"};
         handleUserInput( keys );
 
 	}
@@ -67,6 +71,12 @@ public class Net_tcp : MonoBehaviour {
                 break;
             }
         }
+        foreach (int mb in mouseButtons) {
+            if (Input.GetMouseButtonDown(mb) || Input.GetMouseButtonUp(mb)) {
+                shouldSend = true;
+                break;
+            }
+        }
 
         if (!shouldSend)
             return;
@@ -75,6 +85,9 @@ public class Net_tcp : MonoBehaviour {
         packet.a = Input.GetKey("a");
         packet.s = Input.GetKey("s");
         packet.d = Input.GetKey("d");
+        packet.lmb = Input.GetMouseButton(0);
+
+        print(packet.lmb);
         
         var bytes = MessagePackSerializer.Serialize(packet);
         writeSocket(bytes);
@@ -85,6 +98,13 @@ public class Net_tcp : MonoBehaviour {
             return entities[id];
         } else {
             return createEntity(id, isClient);
+        }
+    }
+
+    public static void removeEntity(int id) {
+        if (entities.ContainsKey(id)) {
+
+            entities.Remove(id);
         }
     }
 
@@ -138,19 +158,31 @@ public class Net_tcp : MonoBehaviour {
 
     // Goes through the update queue from received packets and applies them
     public void manageEntityUpdateQueue() {
-        lock (_entityUpdateQueueLock)
+        lock (_entityActionQueueLock)
          {
-            while (entityUpdateQueue.Count > 0) {
-                Entity e = entityUpdateQueue.Dequeue();
-                entities[e.id] = e;
+            while (entityActionQueue.Count > 0) {
+                EntityAction eAction = entityActionQueue.Dequeue();
+                Entity e = eAction.e;
+                if (eAction.action == "update") {
+                    entities[e.id] = e;
+                } else if (eAction.action == "remove") {
+                    GameObject.Destroy(e.go);
+                    entities.Remove(e.id);
+                }
             }   
          }
     }
 
-    public void scheduleEntityUpdate(Entity e) {
-        lock (_entityUpdateQueueLock) {
-            if (entityUpdateQueue.Count < _entityUpdateQueueMax) {
-                entityUpdateQueue.Enqueue(e);
+    // Schedules an update to happen on the main thread
+    //   This is because we cannot update game objects 
+    //   on any thread other than main.
+    public void scheduleEntityUpdate(String action, Entity e) {
+        lock (_entityActionQueueLock) {
+            if (entityActionQueue.Count < _entityActionQueueMax) {
+                EntityAction eAction = new EntityAction();
+                eAction.action = action;
+                eAction.e = e;
+                entityActionQueue.Enqueue(eAction);
             }
         }
     }
@@ -169,13 +201,23 @@ public class Net_tcp : MonoBehaviour {
                     ReceivePacket rp = MessagePackSerializer.Deserialize<ReceivePacket>(net_stream, true);
                     // ReceivePacket rp = MsgPack.Deserialize<ReceivePacket>(net_stream);
                     if (rp.type == "player") {
-                        
                         Entity e = getEntity(rp.id, rp.is_client);
                         e.pos.x = (float)rp.x;
                         e.pos.y = (float)rp.y;
                         e.pos.z = (float)rp.z;
                         // schedule this update (so it happens in sync)
-                        scheduleEntityUpdate(e);
+                        scheduleEntityUpdate("update", e);
+                    } else if (rp.type == "projectile") {
+                        print("Got projectile message!");
+                        Entity e = getEntity(rp.id, false);
+                        e.pos.x = (float)rp.x;
+                        e.pos.y = (float)rp.y;
+                        e.pos.z = (float)rp.z;
+                        scheduleEntityUpdate("update", e);
+                    } else if (rp.type == "remove") {
+                        print("Got remove message!");
+                        Entity e = getEntity(rp.id, false);
+                        scheduleEntityUpdate("remove", e);
                     }
                 } catch (Exception e) {
                     print("Error parsing!: " + e.Message);
@@ -191,11 +233,9 @@ public class Net_tcp : MonoBehaviour {
             // if the client entity has actually been created
             if (ce != null) {
                 // if the rotation has changed, send it!
-                if (ce.rotChanged) {
+                if (ce.mouseAngleChanged) {
                     RotationPacket rp = new RotationPacket() {
-                        x = (int)ce.rot.x,
-                        y = (int)ce.rot.y,
-                        z = (int)ce.rot.z
+                        z = ce.mouseAngle
                     };
                     var bytes = MessagePackSerializer.Serialize(rp);
                     writeSocket(bytes);
@@ -211,10 +251,6 @@ public class Net_tcp : MonoBehaviour {
             return;
 
 		net_stream.Write(line, 0, line.Length);
-        // line = line + "\r\n";
-		// Byte[] data = System.Text.Encoding.ASCII.GetBytes("hi");
-		// 
-		// MessagePack.Serialize(new { field1 = 1, field2 = 2 }, net_stream);
     }
 
     public void closeSocket()
@@ -274,6 +310,8 @@ public class InputPacket
     public bool s { get; set; }
     [Key("d")]
     public bool d { get; set; }
+    [Key("lmb")]
+    public bool lmb { get; set; }
 }
 
 [MessagePackObject]
@@ -281,10 +319,6 @@ public class RotationPacket
 {
     [Key("type")]
     public string type = "rot";
-    [Key("x")]
-    public int x { get; set; }
-    [Key("y")]
-    public int y { get; set; }
     [Key("z")]
     public int z { get; set; }
 }
@@ -310,7 +344,12 @@ public class Entity {
     public int id;
     public bool isClient = false;
     public Vector3 pos;
-    public Vector3 rot;
-    public bool rotChanged = false;
+    public int mouseAngle;
+    public bool mouseAngleChanged;
     public GameObject go;
+}
+
+public class EntityAction {
+    public string action;
+    public Entity e;
 }
